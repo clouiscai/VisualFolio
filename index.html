@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carl Louis | Portfolio</title>
+  <meta name="description"
+    content="A premium aerospace engineering portfolio designed as a next-generation mission interface." />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23070B14'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23F4B6C2' stroke-width='3'/%3E%3Cpath d='M14 32h36M32 14v36' stroke='%23F8CAD4' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23F4B6C2'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.165.0/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <canvas id="spacefield" aria-hidden="true"></canvas>
+  <div class="site-shell">
+    <header class="topbar" aria-label="Primary navigation">
+      <nav class="nav-links">
+        <a href="#who">About</a>
+        <a href="#projects">Projects</a>
+        <a href="#field-notes">Field Notes</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="masthead-section" aria-label="Portfolio masthead">
+        <div class="portfolio-masthead reveal" aria-label="Portfolio title">
+          <span>Carl Louis</span>
+          <span>Portfolio</span>
+        </div>
+      </section>
+
+      <section class="section about" id="who">
+        <div class="section-heading reveal">
+          <h2>ABOUT</h2>
+        </div>
+
+        <aside class="social-rail reveal" aria-label="Profile links">
+          <a class="profile-link link-resume" href="./assets/about/(Carl%20Louis)%20Resume_March_2026.pdf"
+            target="_blank" rel="noopener noreferrer" aria-label="Resume">
+            <span class="link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M7 3.5h6.5L18 8v12.5H7z" />
+                <path d="M13.5 3.5V8H18" />
+              </svg>
+            </span>
+            <span class="link-label">RESUME</span>
+          </a>
+          <a class="profile-link link-linkedin" href="https://www.linkedin.com/in/carl-louis/" target="_blank"
+            rel="noopener noreferrer" aria-label="LinkedIn">
+            <span class="link-icon logo-text" aria-hidden="true">in</span>
+            <span class="link-label">LINKEDIN</span>
+          </a>
+          <a class="profile-link link-github" href="https://github.com/clouiscai" target="_blank"
+            rel="noopener noreferrer" aria-label="GitHub">
+            <span class="link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path
+                  d="M12 3.5a8.5 8.5 0 0 0-2.7 16.6c.4.1.5-.2.5-.4v-1.5c-2.2.5-2.7-.9-2.7-.9-.4-.9-.9-1.1-.9-1.1-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.2 1.9.9 2.3.7.1-.5.3-.9.5-1.1-1.8-.2-3.6-.9-3.6-3.9 0-.9.3-1.6.8-2.2-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8a7.7 7.7 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.5 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.2 0 3-1.8 3.7-3.6 3.9.3.3.6.8.6 1.6v2c0 .3.1.5.5.4A8.5 8.5 0 0 0 12 3.5z" />
+              </svg>
+            </span>
+            <span class="link-label">GITHUB</span>
+          </a>
+        </aside>
+
+        <div class="about-layout">
+          <article class="identity-console reveal">
+            <div class="identity-copy">
+              <h2>Carl Louis</h2>
+              <p class="identity-subtitle">Aerospace Engineer</p>
+
+              <div class="about-details">
+                <div>
+                  <span>CURRENTLY BUILDING</span>
+                  <ul class="building-list">
+                    <li>
+                      <strong>FWISH</strong>
+                      <span class="desc">Personal Ground-effect craft development</span>
+                    </li>
+                    <li>
+                      <strong>ROBOTX 2026 with SIT OptiPrime</strong>
+                      <span class="desc">International maritime robotics competition</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div>
+                  <span>DOMAINS</span>
+                  <div class="domain-tags" aria-label="Engineering domains">
+                    <span>Autonomous Systems</span>
+                    <span>Flight Control Systems</span>
+                    <span>Aerodynamics</span>
+                  </div>
+                </div>
+
+                <div>
+                  <span>FOUNDATION</span>
+                  <strong>BEng Aerospace Engineering, Singapore Institute of Technology</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="profile-static">
+              <img src="./assets/about/me.jpg" alt="Carl Louis" />
+            </div>
+          </article>
+        </div>
+        <div class="section-kicker about-closing reveal">
+          <h2>Building systems, driven by curiosity</h2>
+        </div>
+        <div class="profile-stack reveal" aria-label="Rolling profile image preview">
+          <div class="photo-roll">
+            <div class="roll-track">
+              <div class="roll-frame frame">
+                <img src="./assets/about/FWISH_V0_display_build.jpg" alt="FWISH display build" />
+              </div>
+              <div class="roll-frame frame">
+                <img src="./assets/about/FWISH_craft_cfd.jpg" alt="FWISH ANSYS Simulation" />
+              </div>
+              <div class="roll-frame frame">
+                <img src="./assets/about/AIRBORNE_25kg.jpg" alt="Airborne 25kg" />
+              </div>
+              <div class="roll-frame frame">
+                <img src="./assets/about/SAFMC_presentation.jpg" alt="SAFMC presentation" />
+              </div>
+              <div class="roll-frame frame">
+                <img src="./assets/about/me_with_concorde.jpg" alt="Concorde" />
+              </div>
+              <div class="roll-frame frame">
+                <img src="./assets/about/SAFMC_burntFC.jpg" alt="Concorde" />
+              </div>
+              <div class="roll-frame frame">
+                <img src="./assets/about/SAFMC_messytable.jpg" alt="FWISH ANSYS Simulation" />
+              </div>
+              <div class="roll-frame frame">
+                <img src="./assets/about/FWISH_V0_display_build.jpg" alt="" aria-hidden="true" />
+              </div>
+              <div class="roll-frame frame">
+                <img src="./assets/about/FWISH_craft_cfd.jpg" alt="" aria-hidden="true" />
+              </div>
+              <div class="roll-frame frame">
+                <img src="./assets/about/AIRBORNE_25kg.jpg" alt="" aria-hidden="true" />
+              </div>
+              <div class="roll-frame frame">
+                <img src="./assets/about/SAFMC_presentation.jpg" alt="" aria-hidden="true" />
+              </div>
+              <div class="roll-frame frame">
+                <img src="./assets/about/me_with_concorde.jpg " alt="" aria-hidden="true" />
+              </div>
+              <div class="roll-frame frame">
+                <img src="./assets/about/SAFMC_burntFC.jpg " alt="" aria-hidden="true" />
+              </div>
+              <div class="roll-frame frame">
+                <img src="./assets/about/SAFMC_messytable.jpg" alt="" aria-hidden="true" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section projects" id="projects">
+        <div class="section-heading reveal">
+          <h2>PROJECTS</h2>
+        </div>
+        <div class="project-grid">
+          <article class="project-card reveal" data-project="wing-opt">
+            <div class="project-media media-edl">
+              <span class="media-label">DESIGN EXPLORATION</span>
+            </div>
+            <div class="project-body">
+              <h3>Genetic Aerodynamic Optimisation</h3>
+              <p>
+                Built a computational aerodynamic design engine using genetic algorithms to evolve wing geometries for
+                improved aerodynamic performance.
+              </p>
+            </div>
+          </article>
+          <article class="project-card reveal" data-project="fwish-gev">
+            <div class="project-media media-thermal">
+              <span class="media-label">FLIGHT ARCHITECTURE</span>
+              <img class="card-img contain" src="./assets/projects/fwish-personal-ground-effect-craft/Logo_nobackground_name.png" alt="FWISH Logo" />
+            </div>
+            <div class="project-body">
+              <h3>FWISH Personal Ground-Effect Craft</h3>
+              <p>
+                Developing a personal wing-in-ground-effect vehicle through CFD analysis, aerodynamic optimisation, and
+                stability-focused control development.
+              </p>
+            </div>
+          </article>
+          <article class="project-card reveal" data-project="airframe-opt">
+            <div class="project-media media-airframe">
+              <span class="media-label">STRUCTURAL OPTIMISATION</span>
+              <video class="card-video"
+                src="./assets/projects/lightweight-uav-airframe-structural-optimisation/preview.mp4" muted loop
+                playsinline preload="auto"></video>
+            </div>
+            <div class="project-body">
+              <h3>Lightweight UAV Airframe Structural Optimisation</h3>
+              <p>
+                Structural optimisation project focused on reducing UAV airframe mass while maintaining stiffness
+                through ANSYS-based simulation and prototype validation.
+              </p>
+            </div>
+          </article>
+          <article class="project-card reveal" data-project="drone-scratch">
+            <div class="project-media media-orbit">
+              <span class="media-label">CONTROL SYSTEMS</span>
+              <video class="card-video" src="./assets/projects/diy-uav-flight-control-stack/preview.mp4" muted loop
+                playsinline preload="auto"></video>
+            </div>
+            <div class="project-body">
+              <h3>Ground-up UAV Flight Control Stack</h3>
+              <p>
+                Custom quadcopter platform built with ESP32-based flight control, sensor fusion state estimation, and
+                cascaded PID attitude control.
+              </p>
+            </div>
+          </article>
+          <article class="project-card reveal" data-project="thrust-platform">
+            <div class="project-media media-thrust">
+              <span class="media-label">PROPULSION TEST</span>
+              <video class="card-video" src="./assets/projects/diy-thrust-characterisation-platform/preview.mp4" muted
+                loop playsinline preload="auto"></video>
+            </div>
+            <div class="project-body">
+              <h3>Propulsion Characterisation Platform</h3>
+              <p>
+                Custom calibration test stand built to measure motor and propeller thrust, logging dynamic
+                force.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section field-notes" id="field-notes">
+        <div class="section-heading reveal">
+          <h2>FIELD NOTES</h2>
+        </div>
+        <div class="notes-grid">
+          <article class="note-card note-wide reveal">
+            <div class="note-media media-crew"></div>
+            <div class="note-copy">
+              <span>CREW / LAB</span>
+              <h3>Team reviews, build sessions, and late-stage test prep.</h3>
+            </div>
+          </article>
+          <article class="note-card reveal">
+            <div class="note-media media-bench"></div>
+            <div class="note-copy">
+              <span>WORKBENCH</span>
+              <h3>Prototypes, wiring, sensors, and the messy middle.</h3>
+            </div>
+          </article>
+          <article class="note-card reveal">
+            <div class="note-media media-visit"></div>
+            <div class="note-copy">
+              <span>PEOPLE</span>
+              <h3>Conversations, demos, and moments worth remembering.</h3>
+            </div>
+          </article>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Project Detail Modal -->
+  <div class="project-modal-overlay" id="project-modal-overlay">
+    <div class="project-modal" id="project-modal">
+      <button class="modal-close" id="modal-close" aria-label="Close project details">&times;</button>
+
+      <!-- Content (like the hero copy area) -->
+      <div class="modal-content">
+        <h1 class="modal-title" id="modal-title"></h1>
+        <p class="modal-description" id="modal-description"></p>
+
+        <!-- Telemetry Strip (like the hero telemetry strip) -->
+        <div class="modal-telemetry" id="modal-telemetry">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Media Gallery -->
+        <p class="modal-section-heading">Media &amp; Documentation</p>
+        <div class="modal-media-gallery" id="modal-media-gallery">
+          <!-- Media slots will be injected by JS -->
+        </div>
+
+        <!-- Technologies -->
+        <p class="modal-section-heading">Engineering Stack</p>
+        <div class="modal-tags" id="modal-tags">
+          <!-- Tags will be injected by JS -->
+        </div>
+      </div>
+
+      <!-- Visual Frame (like the hero spacecraft frame) -->
+      <div class="modal-visual-frame" id="modal-visual-frame">
+        <canvas id="modalScene"></canvas>
+        <div class="flight-test-panel" id="flight-test-panel" aria-hidden="true"></div>
+        <div class="propulsion-telemetry-panel" id="propulsion-telemetry-panel" aria-hidden="true"></div>
+        <div class="modal-hud-ring modal-ring-a"></div>
+        <div class="modal-hud-ring modal-ring-b"></div>
+        <div class="modal-scanline"></div>
+        <div class="modal-pin modal-pin-top" id="modal-pin-top">
+          <span id="modal-pin-top-label"></span>
+          <strong id="modal-pin-top-value"></strong>
+        </div>
+        <div class="modal-pin modal-pin-bottom" id="modal-pin-bottom">
+          <span id="modal-pin-bottom-label"></span>
+          <strong id="modal-pin-bottom-value"></strong>
+        </div>
+        <span class="modal-hero-label" id="modal-hero-label"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Media Viewer Overlay (Lightbox + Description Sidebar) -->
+  <div class="media-viewer-overlay" id="media-viewer-overlay" aria-hidden="true">
+    <button class="media-viewer-close" id="media-viewer-close" aria-label="Close media viewer">&times;</button>
+    <div class="media-viewer-container">
+      <div class="media-viewer-display" id="media-viewer-display">
+        <!-- Injected by JS (img or video) -->
+      </div>
+      <aside class="media-viewer-sidebar">
+        <h3 id="media-viewer-title">Asset View</h3>
+        <p class="media-viewer-description" id="media-viewer-description"></p>
+      </aside>
+    </div>
+  </div>
+
+  <script type="module" src="./script.js"></script>
+</body>
+
+</html>
