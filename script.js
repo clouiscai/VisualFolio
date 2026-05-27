@@ -1710,11 +1710,10 @@ function openFieldAlbum(categoryId) {
 
   kicker.textContent = `FIELD NOTES / ${category.label}`;
   title.textContent = category.label;
-  description.textContent = category.description;
+  description.textContent = "";
   groups.innerHTML = items.length
     ? [...albums.entries()]
       .map(([album, albumItems]) => {
-        const allTags = [...new Set(albumItems.flatMap((item) => item.tags))].slice(0, 5);
         return `
           <section class="field-album-group">
             <div class="field-album-group-header">
@@ -1722,7 +1721,6 @@ function openFieldAlbum(categoryId) {
                 <span>${albumItems.length} ${albumItems.length === 1 ? "ENTRY" : "ENTRIES"}</span>
                 <h3>${album}</h3>
               </div>
-              <p>${allTags.map((tag) => `#${tag}`).join(" ")}</p>
             </div>
             <div class="field-media-grid">
               ${albumItems.map((item) => `
@@ -1732,9 +1730,7 @@ function openFieldAlbum(categoryId) {
                     ${item.type === "video" ? '<span class="field-video-badge">VIDEO</span>' : ""}
                   </div>
                   <div class="field-media-copy">
-                    <span>${new Date(item.date).getFullYear()}</span>
                     <h4>${item.title}</h4>
-                    <p>${item.tags.map((tag) => `#${tag}`).join(" ")}</p>
                   </div>
                 </article>`).join("")}
             </div>
@@ -1745,8 +1741,8 @@ function openFieldAlbum(categoryId) {
 
   groups.querySelectorAll(".field-media-card").forEach((card) => {
     const open = () => {
-      const selectedIndex = items.findIndex((item) => item.id === card.dataset.fieldMediaId);
-      openMediaItems(items, Math.max(0, selectedIndex));
+      const selectedItem = items.find((item) => item.id === card.dataset.fieldMediaId);
+      if (selectedItem) window.open(selectedItem.src, "_blank", "noopener,noreferrer");
     };
     card.addEventListener("click", open);
     card.addEventListener("keydown", (event) => {
