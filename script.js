@@ -1871,7 +1871,29 @@ mediaViewerOverlay.addEventListener("click", (e) => {
   if (e.target === mediaViewerOverlay) closeMediaViewer();
 });
 
-renderFieldNotes();
+const fieldNotesSection = document.getElementById("field-notes");
+let fieldNotesRendered = false;
+
+function renderFieldNotesWhenVisible() {
+  if (fieldNotesRendered) return;
+  fieldNotesRendered = true;
+  renderFieldNotes();
+}
+
+if (fieldNotesSection) {
+  const fieldNotesObserver = new IntersectionObserver(
+    (entries, observer) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        renderFieldNotesWhenVisible();
+        observer.disconnect();
+      }
+    },
+    { rootMargin: "180px 0px", threshold: 0.01 }
+  );
+  fieldNotesObserver.observe(fieldNotesSection);
+} else {
+  renderFieldNotesWhenVisible();
+}
 
 // Escape key listener for both modal and media viewer overlays
 document.addEventListener("keydown", (e) => {
