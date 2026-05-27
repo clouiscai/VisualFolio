@@ -1742,7 +1742,7 @@ function openFieldAlbum(categoryId) {
   groups.querySelectorAll(".field-media-card").forEach((card) => {
     const open = () => {
       const selectedItem = items.find((item) => item.id === card.dataset.fieldMediaId);
-      if (selectedItem) window.open(selectedItem.src, "_blank", "noopener,noreferrer");
+      if (selectedItem) openRawMediaViewer(selectedItem);
     };
     card.addEventListener("click", open);
     card.addEventListener("keydown", (event) => {
@@ -1771,6 +1771,13 @@ fieldAlbumClose?.addEventListener("click", closeFieldAlbum);
 fieldAlbumOverlay?.addEventListener("click", (event) => {
   if (event.target === fieldAlbumOverlay) closeFieldAlbum();
 });
+
+function openRawMediaViewer(item) {
+  mediaViewerItems = [item];
+  mediaViewerIndex = 0;
+  renderMediaViewerItem(item);
+  mediaViewerOverlay.classList.add("raw-active");
+}
 
 function openMediaItems(items, index = 0) {
   mediaViewerItems = items;
@@ -1804,15 +1811,12 @@ function renderMediaViewerItem(item) {
   } else if (item.type === "video") {
     const video = document.createElement("video");
     video.src = item.src;
-    video.autoplay = true;
+    video.autoplay = false;
     video.loop = true;
     video.controls = true;
     video.muted = true;
     video.setAttribute("playsinline", "true");
     mediaViewerDisplay.appendChild(video);
-    video.play().catch((err) => {
-      console.warn("Autoplay was prevented by browser security policy.", err);
-    });
   } else if (item.type === "pdf") {
     const iframe = document.createElement("iframe");
     iframe.src = `${item.src}#view=FitH&page=1`;
@@ -1830,6 +1834,19 @@ function renderMediaViewerItem(item) {
       <span class="placeholder-sub">CONCEPTUAL SCHEMATIC / ARCHIVE DATA ONLY</span>
     `;
     mediaViewerDisplay.appendChild(placeholder);
+  }
+
+  // Add Date metadata overlay on top right of the display
+  if (item.date) {
+    const metaContainer = document.createElement("div");
+    metaContainer.className = "media-viewer-meta";
+
+    const dateEl = document.createElement("span");
+    dateEl.className = "media-viewer-meta-date";
+    dateEl.textContent = item.date;
+    metaContainer.appendChild(dateEl);
+
+    mediaViewerDisplay.appendChild(metaContainer);
   }
 
   // Activate lightbox overlay
@@ -1856,6 +1873,7 @@ function closeMediaViewer() {
   }
   mediaViewerOverlay.classList.remove("active");
   mediaViewerOverlay.classList.remove("pdf-active");
+  mediaViewerOverlay.classList.remove("raw-active");
   mediaViewerOverlay.classList.remove("has-sequence");
   mediaViewerOverlay.setAttribute("aria-hidden", "true");
   mediaViewerDisplay.innerHTML = "";
