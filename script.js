@@ -394,20 +394,14 @@ const projectData = {
     },
   },
   "fwish-gev": {
-    label: "GEV FLIGHT",
+    label: "WORK IN PROGRESS",
     type: "GEV-01 / Aerodynamics",
     title: "FWISH Ground-Effect Craft",
     description:
       "A personal wing-in-ground-effect (WIG) craft research and prototyping platform designed to exploit aerodynamic lift enhancements when operating close to flat boundaries. The project involves CFD simulation of high-pressure ground cushioning, aerodynamic wing-profile design, and construction of scaled prototypes to evaluate pitch stability, height-sensing control loops, and thrust line optimizations.",
-    pins: {
-      top: { label: "GROUND HEIGHT", value: "h < 0.25c" },
-      bottom: { label: "LIFT INCREASE", value: "+38% WIG" },
-    },
+    pins: null,
     telemetry: [
-      { label: "ANALYSIS", value: "CFD / Fluent" },
-      { label: "MODEL", value: "6-DOF Simulink" },
-      { label: "CRUISE SPEED", value: "45 knots (est)" },
-      { label: "STATUS", value: "PROTOTYPING" },
+      { label: "STATUS", value: "Prototyping" },
     ],
     media: [
       {
@@ -429,51 +423,37 @@ const projectData = {
         description: "The physical construction and structural assembly phase of the FWISH V0 display model, checking alignment of structural spars and control surface hinge lines."
       },
       {
-        type: "placeholder",
-        label: "Radio Test Flight Video",
-        description: "Telemetry logs and video recording from the initial radio-controlled scaled prototype flight test."
+        type: "video",
+        src: "./assets/projects/fwish-personal-ground-effect-craft/8.12x_top te gurney in_developed.mp4",
+        alt: "Gurney Configuration LES Wake Development",
+        description: "LES-based wake investigation evidence for the developed top TE Gurney configuration."
+      },
+      {
+        type: "video",
+        src: "./assets/projects/fwish-personal-ground-effect-craft/manufacturing.mp4",
+        alt: "FWISH Manufacturing Evidence",
+        description: "Manufacturing and prototype build evidence for the FWISH ground-effect craft."
+      },
+      {
+        type: "pdf",
+        src: "./assets/projects/fwish-personal-ground-effect-craft/Carl_Louis_Capstone_Report_LES_Based_Investigation_of_Unsteady_Wake.pdf",
+        label: "Capstone Report",
+        description: "LES Based Investigation of Unsteady Wake capstone report documentation."
       }
     ],
     tags: ["CFD", "Aerodynamics", "Simulink", "WIG Craft", "Dynamics"],
   },
   "wing-opt": {
-    label: "AERO OPT",
+    label: "WORK IN PROGRESS",
     type: "OPT-01 / Computational Design",
-    title: "Wing Optimisation with Evolutionary Model",
+    title: "Genetic Aerodynamic Design Optimisation",
     description:
-      "A numerical design engine that employs genetic algorithms and evolutionary strategies to optimize 3D wing profiles for maximum lift-to-drag ratio. The pipeline integrates a panel method aerodynamic solver, parameterizes airfoil thickness and camber distributions, and runs iterative generation loops with selection, crossover, and mutation operators to converge on optimal wing shapes across specific Mach and Reynolds regimes.",
-    pins: {
-      top: { label: "GENERATIONS", value: "1,500 runs" },
-      bottom: { label: "DRAG REDUCTION", value: "-14.2% L/D" },
-    },
+      "Developing a parametric aerodynamic optimisation engine that generates wing populations, evaluates each design through CFD analysis, and applies genetic evolution strategies to converge toward higher-performing aerodynamic geometries.",
+    pins: null,
     telemetry: [
-      { label: "OPTIMIZER", value: "Genetic Algorithm" },
-      { label: "SOLVER", value: "XFOIL / Panel Method" },
-      { label: "POPULATION", value: "200 per gen" },
-      { label: "STATUS", value: "COMPLETE" },
+      { label: "STATUS", value: "Building" },
     ],
-    media: [
-      {
-        type: "placeholder",
-        label: "Fitness Evolution",
-        description: "Graph tracking the convergence of the genetic algorithm fitness function over 1,500 design optimization runs."
-      },
-      {
-        type: "placeholder",
-        label: "Optimized Foil Profile",
-        description: "The resulting optimized 2D airfoil geometry showing coordinate outputs designed for maximum lift-to-drag ratio performance."
-      },
-      {
-        type: "placeholder",
-        label: "Pressure Coefficient",
-        description: "Pressure coefficient distribution (Cp) along the upper and lower surfaces of the optimized airfoil layout."
-      },
-      {
-        type: "placeholder",
-        label: "Aerodynamic Convergence",
-        description: "Iterative aerodynamic solver simulation screen showing lift and drag coefficient convergence rates."
-      }
-    ],
+    media: [],
     tags: ["MATLAB", "Evolutionary Models", "Aerodynamics", "Optimization"],
   },
   "airframe-opt": {
@@ -650,7 +630,116 @@ function initModalScene(projectId) {
   scene.add(fillLight);
   scene.add(new THREE.AmbientLight("#ffffff", 0.45));
 
-  if (projectId === "drone-scratch") {
+  const modelConfig = projectData[projectId]?.model;
+  if (modelConfig) {
+    modalAutoRotate = false;
+    const modelGroup = new THREE.Group();
+    modelGroup.position.set(...modelConfig.position);
+    modelGroup.rotation.set(...modelConfig.rotation);
+    group.add(modelGroup);
+
+    const loader = new GLTFLoader();
+    const pinkModelMaterial = new THREE.MeshStandardMaterial({
+      color: rose,
+      metalness: 0.42,
+      roughness: 0.36,
+      emissive: new THREE.Color("#35131e"),
+      emissiveIntensity: 0.22,
+    });
+
+    loader.load(
+      modelConfig.src,
+      (gltf) => {
+        const model = gltf.scene;
+        let meshCount = 0;
+        model.traverse((object) => {
+          if (object.isMesh) {
+            meshCount += 1;
+            object.material = pinkModelMaterial;
+            object.castShadow = true;
+            object.receiveShadow = true;
+          }
+        });
+
+        if (!meshCount) {
+          console.warn(`GLB model for ${projectId} loaded with no mesh content.`);
+        }
+
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        model.position.sub(center);
+        const maxDimension = Math.max(size.x, size.y, size.z) || 1;
+        model.scale.setScalar((modelConfig.scale || 2.25) / maxDimension);
+        modelGroup.add(model);
+      },
+      undefined,
+      (error) => {
+        console.warn(`Unable to load GLB model for ${projectId}:`, error);
+        if (projectId === "fwish-gev") {
+          const fuselage = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.18, 1.8, 20), pinkModelMaterial);
+          fuselage.rotation.z = Math.PI / 2;
+          const wing = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.035, 2.4), pinkModelMaterial);
+          wing.position.x = 0.08;
+          const tail = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.28, 0.04), pinkModelMaterial);
+          tail.position.set(-0.72, 0.16, 0);
+          modelGroup.add(fuselage, wing, tail);
+        }
+      }
+    );
+
+    camera.position.set(...modelConfig.camera);
+
+    let isDragging = false;
+    let previousX = 0;
+    let previousY = 0;
+    const baseZoom = modelConfig.camera[2];
+    const minZoom = baseZoom / 2;
+    const maxZoom = baseZoom / 0.7;
+
+    const onPointerDown = (event) => {
+      isDragging = true;
+      previousX = event.clientX;
+      previousY = event.clientY;
+      canvas.setPointerCapture?.(event.pointerId);
+    };
+
+    const onPointerMove = (event) => {
+      if (!isDragging) return;
+      const deltaX = event.clientX - previousX;
+      const deltaY = event.clientY - previousY;
+      previousX = event.clientX;
+      previousY = event.clientY;
+      modelGroup.rotation.y += deltaX * 0.008;
+      modelGroup.rotation.x += deltaY * 0.008;
+    };
+
+    const stopDragging = (event) => {
+      isDragging = false;
+      if (event?.pointerId !== undefined) canvas.releasePointerCapture?.(event.pointerId);
+    };
+
+    const onWheel = (event) => {
+      event.preventDefault();
+      const nextZ = camera.position.z + Math.sign(event.deltaY) * 0.32;
+      camera.position.z = Math.max(minZoom, Math.min(maxZoom, nextZ));
+      camera.updateProjectionMatrix();
+    };
+
+    canvas.addEventListener("pointerdown", onPointerDown);
+    canvas.addEventListener("pointermove", onPointerMove);
+    canvas.addEventListener("pointerup", stopDragging);
+    canvas.addEventListener("pointerleave", stopDragging);
+    canvas.addEventListener("wheel", onWheel, { passive: false });
+    modalInteractionCleanup = () => {
+      canvas.removeEventListener("pointerdown", onPointerDown);
+      canvas.removeEventListener("pointermove", onPointerMove);
+      canvas.removeEventListener("pointerup", stopDragging);
+      canvas.removeEventListener("pointerleave", stopDragging);
+      canvas.removeEventListener("wheel", onWheel);
+    };
+
+  } else if (projectId === "drone-scratch") {
     // 3D Quadcopter Drone
     const droneGroup = new THREE.Group();
     group.add(droneGroup);
@@ -712,7 +801,7 @@ function initModalScene(projectId) {
       });
     };
 
-  } else if (projectId === "fwish-gev") {
+  } else if (false && projectId === "fwish-gev") {
     // 3D Ground Effect Vehicle (Ekranoplan)
     const gevGroup = new THREE.Group();
     group.add(gevGroup);
@@ -778,7 +867,7 @@ function initModalScene(projectId) {
       grid.position.x = -(seconds * 2.2) % 1.0;
     };
 
-  } else if (projectId === "wing-opt") {
+  } else if (false && projectId === "wing-opt") {
     // 3D Airfoil & Wind Tunnel Flow Simulation
     const wingGroup = new THREE.Group();
     group.add(wingGroup);
@@ -870,7 +959,8 @@ function initModalScene(projectId) {
       flowParticles.geometry.attributes.position.needsUpdate = true;
     };
 
-  } else if (projectId === "airframe-opt") {
+  } else if (projectId === "airframe-opt" || projectId === "fwish-gev") {
+    const isFwishModel = projectId === "fwish-gev";
     modalAutoRotate = false;
     const frameGroup = new THREE.Group();
     frameGroup.position.set(0, -0.05, 0);
@@ -886,7 +976,9 @@ function initModalScene(projectId) {
     });
 
     loader.load(
-      "./assets/projects/lightweight-uav-airframe-structural-optimisation/diy-drone-airframe-v2.glb",
+      isFwishModel
+        ? "./assets/projects/fwish-personal-ground-effect-craft/Model_V0.2a.glb"
+        : "./assets/projects/lightweight-uav-airframe-structural-optimisation/diy-drone-airframe-v2.glb",
       (gltf) => {
         const model = gltf.scene;
         model.traverse((object) => {
@@ -906,7 +998,7 @@ function initModalScene(projectId) {
         frameGroup.add(model);
       },
       undefined,
-      (error) => console.warn("Unable to load airframe GLB model:", error)
+      (error) => console.warn(`Unable to load ${isFwishModel ? "FWISH" : "airframe"} GLB model:`, error)
     );
     const q0 = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI, 'ZXY'));
     frameGroup.quaternion.copy(q0);
@@ -1301,6 +1393,8 @@ function openModal(projectId) {
   visualFrame.classList.toggle("timeline-mode", Boolean(data.flightTimeline));
   visualFrame.classList.toggle("propulsion-mode", Boolean(data.propulsionDashboard));
   visualFrame.classList.toggle("uav-airframe-mode", projectId === "airframe-opt");
+  visualFrame.classList.toggle("fwish-model-mode", projectId === "fwish-gev");
+  visualFrame.classList.toggle("wip-rings-mode", projectId === "wing-opt");
 
   // Populate mission pins
   const pinTop = document.getElementById("modal-pin-top");
@@ -1333,12 +1427,15 @@ function openModal(projectId) {
 
   // Populate media gallery
   const gallery = document.getElementById("modal-media-gallery");
+  gallery.classList.toggle("is-scrollable", data.media.length > 4);
   gallery.innerHTML = data.media
     .map((item, index) => {
       if (item.type === "image") {
         return `<div class="modal-media-slot has-media" data-index="${index}"><img src="${item.src}" alt="${item.alt || ""}" loading="lazy"></div>`;
       } else if (item.type === "video") {
         return `<div class="modal-media-slot has-media" data-index="${index}"><video src="${item.src}" preload="metadata"></video></div>`;
+      } else if (item.type === "pdf") {
+        return `<div class="modal-media-slot has-media pdf-slot" data-index="${index}"><div class="media-slot-placeholder">${item.label || "PDF DOCUMENT"}</div></div>`;
       } else {
         return `<div class="modal-media-slot" data-index="${index}"><div class="media-slot-placeholder">${item.label}</div></div>`;
       }
@@ -1441,6 +1538,8 @@ function closeModal() {
     visualFrame.classList.remove("timeline-mode");
     visualFrame.classList.remove("propulsion-mode");
     visualFrame.classList.remove("uav-airframe-mode");
+    visualFrame.classList.remove("fwish-model-mode");
+    visualFrame.classList.remove("wip-rings-mode");
   }
   const flightPanel = document.getElementById("flight-test-panel");
   if (flightPanel) {
@@ -1533,6 +1632,12 @@ function openMediaViewer(projectId, index) {
     video.play().catch((err) => {
       console.warn("Autoplay was prevented by browser security policy.", err);
     });
+  } else if (item.type === "pdf") {
+    const iframe = document.createElement("iframe");
+    iframe.src = item.src;
+    iframe.title = displayTitle;
+    iframe.className = "media-viewer-pdf";
+    mediaViewerDisplay.appendChild(iframe);
   } else {
     // Conceptual placeholder presentation
     const placeholder = document.createElement("div");

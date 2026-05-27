@@ -2044,6 +2044,48 @@ body.modal-open {
   gap: 7px;
 }
 
+.modal-visual-frame.fwish-model-mode .modal-pin {
+  display: none;
+}
+
+.modal-visual-frame.fwish-model-mode .modal-scanline {
+  display: none;
+}
+
+.modal-visual-frame.fwish-model-mode .modal-hero-label {
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  border: 0;
+  background: transparent;
+  color: rgba(244, 182, 194, 0.32);
+  font-size: clamp(1.4rem, 2.1vw, 2.3rem);
+  letter-spacing: 0.18em;
+  text-align: center;
+  text-shadow: 0 0 28px rgba(244, 182, 194, 0.18);
+  pointer-events: none;
+}
+
+.modal-visual-frame.wip-rings-mode #modalScene,
+.modal-visual-frame.wip-rings-mode .modal-pin,
+.modal-visual-frame.wip-rings-mode .modal-scanline {
+  display: none;
+}
+
+.modal-visual-frame.wip-rings-mode .modal-hero-label {
+  left: 50%;
+  bottom: 42px;
+  transform: translateX(-50%);
+  border: 0;
+  background: transparent;
+  color: rgba(244, 182, 194, 0.34);
+  font-size: clamp(1.35rem, 2vw, 2.2rem);
+  letter-spacing: 0.18em;
+  text-align: center;
+  text-shadow: 0 0 28px rgba(244, 182, 194, 0.18);
+  pointer-events: none;
+}
+
 .propulsion-metrics,
 .propulsion-readouts {
   display: grid;
@@ -2472,6 +2514,31 @@ body.modal-open {
   margin-bottom: 36px;
 }
 
+.modal-media-gallery.is-scrollable {
+  max-height: 560px;
+  overflow-y: auto;
+  padding-right: 8px;
+  align-items: start;
+  scrollbar-color: rgba(244, 182, 194, 0.5) rgba(7, 11, 20, 0.3);
+}
+
+.modal-media-gallery.is-scrollable .modal-media-slot {
+  aspect-ratio: 16 / 9;
+}
+
+.modal-media-gallery.is-scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-media-gallery.is-scrollable::-webkit-scrollbar-track {
+  background: rgba(7, 11, 20, 0.3);
+}
+
+.modal-media-gallery.is-scrollable::-webkit-scrollbar-thumb {
+  background: rgba(244, 182, 194, 0.45);
+  border-radius: 999px;
+}
+
 .modal-media-slot {
   position: relative;
   aspect-ratio: 16 / 10;
@@ -2504,6 +2571,15 @@ body.modal-open {
   pointer-events: none;
 }
 
+.media-viewer-pdf {
+  width: 100%;
+  height: 100%;
+  min-height: 70vh;
+  border: 0;
+  border-radius: 4px;
+  background: #0d1321;
+}
+
 .modal-media-slot.has-media {
   border-style: solid;
   border-color: rgba(148, 163, 184, 0.08);
@@ -2533,6 +2609,13 @@ body.modal-open {
   border-radius: 50%;
   font-size: 1.2rem;
   color: var(--muted);
+}
+
+.pdf-slot .media-slot-placeholder::before {
+  content: "PDF";
+  width: 48px;
+  border-radius: 4px;
+  font-size: 0.7rem;
 }
 
 /* Tags */
