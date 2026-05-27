@@ -68,6 +68,16 @@ export const fieldNotes = [
     date: "2026-02-23",
   },
   {
+    id: "safmc-test-001",
+    title: "Outdoor Tuning and Calibration",
+    description: "Outdoor tuning and calibration for the competition drone.",
+    category: "work",
+    album: "SAFMC 2026",
+    src: "./assets/field-notes/work/safmc-outdoor-tuning-calibration.jpg",
+    type: "image",
+    date: "2026-04-03",
+  },
+  {
     id: "fwish-discard-lastpiece-001",
     title: "v0 Display Model discarded",
     description: "Discarding the final component of the FWISH V0 display model structure.",
