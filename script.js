@@ -438,7 +438,7 @@ const projectData = {
         type: "pdf",
         src: "./assets/projects/fwish-personal-ground-effect-craft/Carl_Louis_Capstone_Report_LES_Based_Investigation_of_Unsteady_Wake.pdf",
         label: "Capstone Report",
-        description: "LES Based Investigation of Unsteady Wake capstone report documentation."
+        description: "Undergraduate capstone research investigating unsteady wake interactions between tandem wings in FWISH. The project used high-fidelity LES CFD simulations to analyse aerodynamic coupling, wake behaviour, and stability implications for personal ground-effect craft development."
       }
     ],
     tags: ["CFD", "Aerodynamics", "Simulink", "WIG Craft", "Dynamics"],
@@ -1038,10 +1038,10 @@ function initModalScene(projectId) {
 
       // Create an incremental rotation quaternion for the screen axes (YXZ order)
       const qDiff = new THREE.Quaternion().setFromEuler(new THREE.Euler(deltaPitch, deltaYaw, 0, 'YXZ'));
-      
+
       // Apply the rotation relative to the screen (premultiply)
       frameGroup.quaternion.premultiply(qDiff);
-      
+
       // Track target quaternion to match free drag
       qTarget.copy(frameGroup.quaternion);
     };
@@ -1049,22 +1049,22 @@ function initModalScene(projectId) {
     const stopDragging = (event) => {
       if (isDragging) {
         isDragging = false;
-        
+
         // Decompose the current orientation relative to the default orientation q0
         const q0Inv = q0.clone().invert();
         const qRel = q0Inv.clone().multiply(frameGroup.quaternion);
         const eulerRel = new THREE.Euler().setFromQuaternion(qRel, 'ZXY');
-        
+
         // Snap relative Euler angles to 45 degree steps (Pitch is X, Yaw is Y, Roll is Z)
         const snappedPitch = snapTo45(eulerRel.x);
         const snappedYaw = snapTo45(eulerRel.y);
         const snappedRoll = snapTo45(eulerRel.z);
-        
+
         // Rebuild target orientation (Pitch is X, Yaw is Y, Roll is Z)
         const targetEuler = new THREE.Euler(snappedPitch, snappedYaw, snappedRoll, 'ZXY');
         const qTargetRel = new THREE.Quaternion().setFromEuler(targetEuler);
         qTarget.copy(q0.clone().multiply(qTargetRel));
-        
+
         if (event?.pointerId !== undefined) canvas.releasePointerCapture?.(event.pointerId);
       }
     };
@@ -1435,7 +1435,19 @@ function openModal(projectId) {
       } else if (item.type === "video") {
         return `<div class="modal-media-slot has-media" data-index="${index}"><video src="${item.src}" preload="metadata"></video></div>`;
       } else if (item.type === "pdf") {
-        return `<div class="modal-media-slot has-media pdf-slot" data-index="${index}"><div class="media-slot-placeholder">${item.label || "PDF DOCUMENT"}</div></div>`;
+        return `<div class="modal-media-slot has-media pdf-slot" data-index="${index}">
+          <div class="pdf-card-preview" aria-hidden="true">
+            <div class="pdf-card-topline"></div>
+            <div class="pdf-card-logos">
+              <span>SIT</span>
+              <span>UofG</span>
+            </div>
+            <p class="pdf-card-type">CAPSTONE REPORT</p>
+            <h4>${item.label || "LES-Based Investigation Report"}</h4>
+            <p>LES-Based Investigation of Unsteady Wake Effects on the Rear Wing in Tandem WIG Configuration</p>
+            <span class="pdf-card-author">Carl Louis</span>
+          </div>
+        </div>`;
       } else {
         return `<div class="modal-media-slot" data-index="${index}"><div class="media-slot-placeholder">${item.label}</div></div>`;
       }
@@ -1605,6 +1617,7 @@ function openMediaViewer(projectId, index) {
 
   // Clear previous content
   mediaViewerDisplay.innerHTML = "";
+  mediaViewerOverlay.classList.toggle("pdf-active", item.type === "pdf");
 
   // Title selection
   let displayTitle = item.alt || item.label || "Asset view";
@@ -1634,7 +1647,7 @@ function openMediaViewer(projectId, index) {
     });
   } else if (item.type === "pdf") {
     const iframe = document.createElement("iframe");
-    iframe.src = item.src;
+    iframe.src = `${item.src}#view=FitH&page=1`;
     iframe.title = displayTitle;
     iframe.className = "media-viewer-pdf";
     mediaViewerDisplay.appendChild(iframe);
@@ -1662,6 +1675,7 @@ function closeMediaViewer() {
     video.pause();
   }
   mediaViewerOverlay.classList.remove("active");
+  mediaViewerOverlay.classList.remove("pdf-active");
   mediaViewerOverlay.setAttribute("aria-hidden", "true");
   mediaViewerDisplay.innerHTML = "";
 }
