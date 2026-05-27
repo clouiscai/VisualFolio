@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Carl Louis | Portfolio</title>
   <meta name="description"
-    content="A premium aerospace engineering portfolio designed as a next-generation mission interface." />
+    content="Projects, prototypes, simulations, and field notes from my work in aerospace systems, controls, CFD, and autonomous engineering." />
   <link rel="icon"
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23070B14'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23F4B6C2' stroke-width='3'/%3E%3Cpath d='M14 32h36M32 14v36' stroke='%23F8CAD4' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23F4B6C2'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -140,7 +140,7 @@
                 <img src="./assets/about/me_with_concorde.jpg" alt="Concorde" />
               </div>
               <div class="roll-frame frame">
-                <img src="./assets/about/SAFMC_burntFC.jpg" alt="Concorde" />
+                <img src="./assets/about/OptiPrime-with-DesmondLee-2.JPG" alt="Concorde" />
               </div>
               <div class="roll-frame frame">
                 <img src="./assets/about/SAFMC_messytable.jpg" alt="FWISH ANSYS Simulation" />
@@ -161,7 +161,7 @@
                 <img src="./assets/about/me_with_concorde.jpg " alt="" aria-hidden="true" />
               </div>
               <div class="roll-frame frame">
-                <img src="./assets/about/SAFMC_burntFC.jpg " alt="" aria-hidden="true" />
+                <img src="./assets/about/OptiPrime-with-DesmondLee-2.JPG " alt="" aria-hidden="true" />
               </div>
               <div class="roll-frame frame">
                 <img src="./assets/about/SAFMC_messytable.jpg" alt="" aria-hidden="true" />
@@ -183,19 +183,23 @@
             <div class="project-body">
               <h3>Genetic Aerodynamic Design Optimisation</h3>
               <p>
-                Computational aerodynamic design engine using CFD and genetic algorithms to evolve high-performance wing geometries.
+                Computational aerodynamic design engine using CFD and genetic algorithms to evolve high-performance wing
+                geometries.
               </p>
             </div>
           </article>
           <article class="project-card reveal" data-project="fwish-gev">
             <div class="project-media media-thermal">
               <span class="media-label">FLIGHT ARCHITECTURE</span>
-              <img class="card-img contain" src="./assets/projects/fwish-personal-ground-effect-craft/Logo_nobackground_name.png" alt="FWISH Logo" />
+              <img class="card-img contain"
+                src="./assets/projects/fwish-personal-ground-effect-craft/Logo_nobackground_name.png"
+                alt="FWISH Logo" />
             </div>
             <div class="project-body">
               <h3>FWISH Personal Ground-Effect Craft</h3>
               <p>
-                Building a personal ground-effect flight platform through aerodynamic engineering, CFD validation, and stability-focused systems development.
+                Building a personal ground-effect flight platform through aerodynamic engineering, CFD validation, and
+                stability-focused systems development.
               </p>
             </div>
           </article>
@@ -249,28 +253,11 @@
         <div class="section-heading reveal">
           <h2>FIELD NOTES</h2>
         </div>
-        <div class="notes-grid">
-          <article class="note-card note-wide reveal">
-            <div class="note-media media-crew"></div>
-            <div class="note-copy">
-              <span>CREW / LAB</span>
-              <h3>Team reviews, build sessions, and late-stage test prep.</h3>
-            </div>
-          </article>
-          <article class="note-card reveal">
-            <div class="note-media media-bench"></div>
-            <div class="note-copy">
-              <span>WORKBENCH</span>
-              <h3>Prototypes, wiring, sensors, and the messy middle.</h3>
-            </div>
-          </article>
-          <article class="note-card reveal">
-            <div class="note-media media-visit"></div>
-            <div class="note-copy">
-              <span>PEOPLE</span>
-              <h3>Conversations, demos, and moments worth remembering.</h3>
-            </div>
-          </article>
+        <p class="field-notes-subtitle reveal">
+          Fragments from the builds, failures, competitions, and people behind the engineering.
+        </p>
+        <div class="notes-grid" id="field-notes-grid">
+          <!-- Field Notes cards are injected from src/data/fieldNotes.js -->
         </div>
       </section>
 
@@ -326,9 +313,24 @@
     </div>
   </div>
 
+  <!-- Field Notes Album Modal -->
+  <div class="field-album-overlay" id="field-album-overlay" aria-hidden="true">
+    <div class="field-album-modal" role="dialog" aria-modal="true" aria-labelledby="field-album-title">
+      <button class="field-album-close" id="field-album-close" aria-label="Close field notes album">&times;</button>
+      <header class="field-album-header">
+        <p class="field-album-kicker" id="field-album-kicker">FIELD NOTES</p>
+        <h2 id="field-album-title"></h2>
+        <p id="field-album-description"></p>
+      </header>
+      <div class="field-album-groups" id="field-album-groups"></div>
+    </div>
+  </div>
+
   <!-- Media Viewer Overlay (Lightbox + Description Sidebar) -->
   <div class="media-viewer-overlay" id="media-viewer-overlay" aria-hidden="true">
     <button class="media-viewer-close" id="media-viewer-close" aria-label="Close media viewer">&times;</button>
+    <button class="media-viewer-nav media-viewer-prev" id="media-viewer-prev" aria-label="Previous media">‹</button>
+    <button class="media-viewer-nav media-viewer-next" id="media-viewer-next" aria-label="Next media">›</button>
     <div class="media-viewer-container">
       <div class="media-viewer-display" id="media-viewer-display">
         <!-- Injected by JS (img or video) -->

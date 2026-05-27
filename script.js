@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "https://unpkg.com/three@0.165.0/examples/jsm/loaders/GLTFLoader.js";
+import { fieldNoteCategories, fieldNotes } from "./src/data/fieldNotes.js";
 
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -570,6 +571,11 @@ const mediaViewerClose = document.getElementById("media-viewer-close");
 const mediaViewerDisplay = document.getElementById("media-viewer-display");
 const mediaViewerTitle = document.getElementById("media-viewer-title");
 const mediaViewerDescription = document.getElementById("media-viewer-description");
+const mediaViewerPrev = document.getElementById("media-viewer-prev");
+const mediaViewerNext = document.getElementById("media-viewer-next");
+
+let mediaViewerItems = [];
+let mediaViewerIndex = 0;
 
 let modalSceneInstance = null;
 let modalCamera = null;
@@ -579,6 +585,78 @@ let modalGroup = null;
 let modalExtraAnimation = null;
 let modalAutoRotate = true;
 let modalInteractionCleanup = null;
+
+function sortNewestFirst(items) {
+  return [...items].sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function mediaElementMarkup(item, className = "") {
+  const classAttr = className ? ` class="${className}"` : "";
+  if (item?.type === "video") {
+    const posterAttr = item.poster ? ` poster="${item.poster}"` : "";
+    return `<video${classAttr} src="${item.src}"${posterAttr} muted loop playsinline preload="metadata"></video>`;
+  }
+  if (item?.type === "image") {
+    return `<img${classAttr} src="${item.src}" alt="${item.title || ""}" loading="lazy">`;
+  }
+  return "";
+}
+
+function buildRingPlaceholder(label = "ARCHIVE EMPTY") {
+  return `
+    <div class="field-placeholder" aria-hidden="true">
+      <span class="field-placeholder-ring ring-one"></span>
+      <span class="field-placeholder-ring ring-two"></span>
+      <strong>${label}</strong>
+    </div>`;
+}
+
+function renderFieldNotes() {
+  const grid = document.getElementById("field-notes-grid");
+  if (!grid) return;
+
+  grid.innerHTML = fieldNoteCategories
+    .map((category) => {
+      const items = sortNewestFirst(fieldNotes.filter((item) => item.category === category.id));
+      const preview = items[0];
+      const previewMarkup = preview ? mediaElementMarkup(preview, "note-preview-media") : buildRingPlaceholder("AWAITING MEDIA");
+      const countLabel = `${items.length} ${items.length === 1 ? "ENTRY" : "ENTRIES"}`;
+      return `
+        <article class="note-card reveal" data-field-category="${category.id}" tabindex="0" role="button" aria-label="Open ${category.label} field notes">
+          <div class="note-media">
+            ${previewMarkup}
+            <div class="note-orbit" aria-hidden="true"></div>
+          </div>
+          <div class="note-copy">
+            <span>${category.label}</span>
+            <h3>${category.description}</h3>
+            <p>${countLabel}</p>
+          </div>
+        </article>`;
+    })
+    .join("");
+
+  grid.querySelectorAll(".reveal").forEach((element) => revealObserver.observe(element));
+  grid.querySelectorAll(".note-card").forEach((card) => {
+    const open = () => openFieldAlbum(card.dataset.fieldCategory);
+    card.addEventListener("click", open);
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        open();
+      }
+    });
+
+    const video = card.querySelector("video");
+    if (video) {
+      card.addEventListener("mouseenter", () => video.play().catch(() => {}));
+      card.addEventListener("mouseleave", () => {
+        video.pause();
+        video.currentTime = 0;
+      });
+    }
+  });
+}
 
 function initModalScene(projectId) {
   cleanupModalScene();
@@ -668,9 +746,10 @@ function initModalScene(projectId) {
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
-        model.position.sub(center);
         const maxDimension = Math.max(size.x, size.y, size.z) || 1;
-        model.scale.setScalar((modelConfig.scale || 2.25) / maxDimension);
+        const scaleFactor = (modelConfig.scale || 2.25) / maxDimension;
+        model.scale.setScalar(scaleFactor);
+        model.position.copy(center).multiplyScalar(-scaleFactor);
         modelGroup.add(model);
       },
       undefined,
@@ -992,15 +1071,18 @@ function initModalScene(projectId) {
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
-        model.position.sub(center);
         const maxDimension = Math.max(size.x, size.y, size.z) || 1;
-        model.scale.setScalar(2.35 / maxDimension);
+        const scaleFactor = 2.35 / maxDimension;
+        model.scale.setScalar(scaleFactor);
+        model.position.copy(center).multiplyScalar(-scaleFactor);
         frameGroup.add(model);
       },
       undefined,
       (error) => console.warn(`Unable to load ${isFwishModel ? "FWISH" : "airframe"} GLB model:`, error)
     );
-    const q0 = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI, 'ZXY'));
+    const q0 = isFwishModel
+      ? new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 4, Math.PI / 4, Math.PI / 4, "ZXY"))
+      : new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI, "ZXY"));
     frameGroup.quaternion.copy(q0);
     camera.position.set(0, 0.15, 6.875);
 
@@ -1083,7 +1165,7 @@ function initModalScene(projectId) {
     canvas.addEventListener("wheel", onWheel, { passive: false });
 
     const pinTop = document.getElementById("modal-pin-top");
-    if (pinTop) pinTop.style.display = "";
+    if (pinTop) pinTop.style.display = isFwishModel ? "none" : "";
 
     modalExtraAnimation = (seconds) => {
       if (!isDragging) {
@@ -1107,7 +1189,7 @@ function initModalScene(projectId) {
       const rollVal = toDegrees(eulerRel.z);
       const yawVal = toDegrees(eulerRel.y);
 
-      if (pinTop) {
+      if (pinTop && !isFwishModel) {
         pinTop.innerHTML = `
           <div class="orientation-telemetry">
             <div class="telemetry-header">
@@ -1609,15 +1691,105 @@ overlay.addEventListener("click", (e) => {
 });
 
 /* â”€â”€ Media Lightbox Viewer Functions â”€â”€ */
-function openMediaViewer(projectId, index) {
-  const project = projectData[projectId];
-  if (!project) return;
-  const item = project.media[index];
+function openFieldAlbum(categoryId) {
+  const category = fieldNoteCategories.find((item) => item.id === categoryId);
+  if (!category) return;
+
+  const albumOverlay = document.getElementById("field-album-overlay");
+  const title = document.getElementById("field-album-title");
+  const kicker = document.getElementById("field-album-kicker");
+  const description = document.getElementById("field-album-description");
+  const groups = document.getElementById("field-album-groups");
+  const items = sortNewestFirst(fieldNotes.filter((item) => item.category === categoryId));
+  const albums = new Map();
+
+  items.forEach((item) => {
+    if (!albums.has(item.album)) albums.set(item.album, []);
+    albums.get(item.album).push(item);
+  });
+
+  kicker.textContent = `FIELD NOTES / ${category.label}`;
+  title.textContent = category.label;
+  description.textContent = category.description;
+  groups.innerHTML = items.length
+    ? [...albums.entries()]
+      .map(([album, albumItems]) => {
+        const allTags = [...new Set(albumItems.flatMap((item) => item.tags))].slice(0, 5);
+        return `
+          <section class="field-album-group">
+            <div class="field-album-group-header">
+              <div>
+                <span>${albumItems.length} ${albumItems.length === 1 ? "ENTRY" : "ENTRIES"}</span>
+                <h3>${album}</h3>
+              </div>
+              <p>${allTags.map((tag) => `#${tag}`).join(" ")}</p>
+            </div>
+            <div class="field-media-grid">
+              ${albumItems.map((item) => `
+                <article class="field-media-card" data-field-media-id="${item.id}" tabindex="0" role="button" aria-label="Open ${item.title}">
+                  <div class="field-media-thumb">
+                    ${mediaElementMarkup(item)}
+                    ${item.type === "video" ? '<span class="field-video-badge">VIDEO</span>' : ""}
+                  </div>
+                  <div class="field-media-copy">
+                    <span>${new Date(item.date).getFullYear()}</span>
+                    <h4>${item.title}</h4>
+                    <p>${item.tags.map((tag) => `#${tag}`).join(" ")}</p>
+                  </div>
+                </article>`).join("")}
+            </div>
+          </section>`;
+      })
+      .join("")
+    : `<section class="field-album-empty">${buildRingPlaceholder("AWAITING MEDIA")}<p>Add media to the ${category.label.toLowerCase()} folder and register it in src/data/fieldNotes.js.</p></section>`;
+
+  groups.querySelectorAll(".field-media-card").forEach((card) => {
+    const open = () => {
+      const selectedIndex = items.findIndex((item) => item.id === card.dataset.fieldMediaId);
+      openMediaItems(items, Math.max(0, selectedIndex));
+    };
+    card.addEventListener("click", open);
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        open();
+      }
+    });
+  });
+
+  document.body.classList.add("modal-open");
+  albumOverlay.classList.add("active");
+  albumOverlay.setAttribute("aria-hidden", "false");
+}
+
+function closeFieldAlbum() {
+  const albumOverlay = document.getElementById("field-album-overlay");
+  albumOverlay.classList.remove("active");
+  albumOverlay.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+}
+
+const fieldAlbumClose = document.getElementById("field-album-close");
+const fieldAlbumOverlay = document.getElementById("field-album-overlay");
+fieldAlbumClose?.addEventListener("click", closeFieldAlbum);
+fieldAlbumOverlay?.addEventListener("click", (event) => {
+  if (event.target === fieldAlbumOverlay) closeFieldAlbum();
+});
+
+function openMediaItems(items, index = 0) {
+  mediaViewerItems = items;
+  mediaViewerIndex = index;
+  const item = mediaViewerItems[mediaViewerIndex];
   if (!item) return;
 
+  renderMediaViewerItem(item);
+}
+
+function renderMediaViewerItem(item) {
   // Clear previous content
   mediaViewerDisplay.innerHTML = "";
   mediaViewerOverlay.classList.toggle("pdf-active", item.type === "pdf");
+  mediaViewerOverlay.classList.toggle("has-sequence", mediaViewerItems.length > 1);
 
   // Title selection
   let displayTitle = item.alt || item.label || "Asset view";
@@ -1669,6 +1841,18 @@ function openMediaViewer(projectId, index) {
   mediaViewerOverlay.setAttribute("aria-hidden", "false");
 }
 
+function openMediaViewer(projectId, index) {
+  const project = projectData[projectId];
+  if (!project) return;
+  openMediaItems(project.media, index);
+}
+
+function showAdjacentMedia(direction) {
+  if (mediaViewerItems.length <= 1) return;
+  mediaViewerIndex = (mediaViewerIndex + direction + mediaViewerItems.length) % mediaViewerItems.length;
+  renderMediaViewerItem(mediaViewerItems[mediaViewerIndex]);
+}
+
 function closeMediaViewer() {
   const video = mediaViewerDisplay.querySelector("video");
   if (video) {
@@ -1676,23 +1860,36 @@ function closeMediaViewer() {
   }
   mediaViewerOverlay.classList.remove("active");
   mediaViewerOverlay.classList.remove("pdf-active");
+  mediaViewerOverlay.classList.remove("has-sequence");
   mediaViewerOverlay.setAttribute("aria-hidden", "true");
   mediaViewerDisplay.innerHTML = "";
+  mediaViewerItems = [];
+  mediaViewerIndex = 0;
 }
 
 // Media Viewer Action Listeners
 mediaViewerClose.addEventListener("click", closeMediaViewer);
+mediaViewerPrev?.addEventListener("click", () => showAdjacentMedia(-1));
+mediaViewerNext?.addEventListener("click", () => showAdjacentMedia(1));
 mediaViewerOverlay.addEventListener("click", (e) => {
   if (e.target === mediaViewerOverlay) closeMediaViewer();
 });
+
+renderFieldNotes();
 
 // Escape key listener for both modal and media viewer overlays
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     if (mediaViewerOverlay.classList.contains("active")) {
       closeMediaViewer();
+    } else if (fieldAlbumOverlay?.classList.contains("active")) {
+      closeFieldAlbum();
     } else if (overlay.classList.contains("active")) {
       closeModal();
     }
+  } else if (mediaViewerOverlay.classList.contains("active") && e.key === "ArrowLeft") {
+    showAdjacentMedia(-1);
+  } else if (mediaViewerOverlay.classList.contains("active") && e.key === "ArrowRight") {
+    showAdjacentMedia(1);
   }
 });
