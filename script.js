@@ -213,6 +213,77 @@ function createSpacecraftScene() {
   window.addEventListener("resize", resize);
 }
 
+function bindHoldToOpen(element, getMediaData) {
+  let holdTimeout = null;
+  let isHoldActive = false;
+  let startX = 0;
+  let startY = 0;
+
+  const onDown = (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+
+    startX = e.clientX;
+    startY = e.clientY;
+    isHoldActive = false;
+    element.dataset.wasHold = "false";
+
+    if (holdTimeout) clearTimeout(holdTimeout);
+    holdTimeout = setTimeout(() => {
+      isHoldActive = true;
+      element.dataset.wasHold = "true";
+      if (mediaViewerOverlay) {
+        mediaViewerOverlay.classList.add("peeking");
+      }
+      const data = getMediaData();
+      if (Array.isArray(data.items)) {
+        openMediaItems(data.items, data.index);
+      } else {
+        openRawMediaViewer(data.item);
+      }
+    }, 1000);
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+  };
+
+  const onMove = (e) => {
+    const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
+    if (dist > 6) {
+      if (holdTimeout) {
+        clearTimeout(holdTimeout);
+        holdTimeout = null;
+      }
+      if (isHoldActive) {
+        isHoldActive = false;
+        closeMediaViewer();
+      }
+      cleanup();
+    }
+  };
+
+  const onUp = (e) => {
+    if (holdTimeout) {
+      clearTimeout(holdTimeout);
+      holdTimeout = null;
+    }
+    if (isHoldActive) {
+      isHoldActive = false;
+      closeMediaViewer();
+    }
+    cleanup();
+  };
+
+  const cleanup = () => {
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onUp);
+    window.removeEventListener("pointercancel", onUp);
+  };
+
+  element.addEventListener("pointerdown", onDown);
+  element.addEventListener("contextmenu", (e) => e.preventDefault());
+}
+
 function initPhotoRoll() {
   const roll = document.querySelector(".photo-roll");
   const track = document.querySelector(".roll-track");
@@ -222,6 +293,7 @@ function initPhotoRoll() {
   let startX = 0;
   let currentOffset = 0;
   let startOffset = 0;
+  let dragDistance = 0;
 
   const baseSpeed = 0.22;
 
@@ -238,6 +310,7 @@ function initPhotoRoll() {
     const clientX = e.type.startsWith("touch") ? e.touches[0].clientX : e.clientX;
     startX = clientX;
     startOffset = currentOffset;
+    dragDistance = 0;
   }
 
   function handleMove(e) {
@@ -249,6 +322,7 @@ function initPhotoRoll() {
 
     const clientX = e.type.startsWith("touch") ? e.touches[0].clientX : e.clientX;
     const deltaX = clientX - startX;
+    dragDistance = Math.abs(deltaX);
 
     const loopSize = getLoopSize();
     if (loopSize <= 0) return;
@@ -300,6 +374,69 @@ function initPhotoRoll() {
   track.querySelectorAll("img, a, span").forEach((el) => {
     el.addEventListener("dragstart", (e) => e.preventDefault());
   });
+
+  const uniqueImages = [];
+  const rollImgs = track.querySelectorAll(".roll-frame img");
+  rollImgs.forEach((img) => {
+    const src = img.getAttribute("src");
+    if (!uniqueImages.some((item) => item.src === src)) {
+      uniqueImages.push({
+        type: "image",
+        src: img.src,
+        alt: img.alt || "About photo",
+        description: img.alt || "Build and testing phase documentation photo."
+      });
+    }
+  });
+
+  rollImgs.forEach((img) => {
+    img.style.cursor = "zoom-in";
+    img.addEventListener("click", () => {
+      if (dragDistance > 5) return;
+      if (img.dataset.wasHold === "true") {
+        img.dataset.wasHold = "false";
+        return;
+      }
+      const index = uniqueImages.findIndex((item) => item.src === img.src);
+      if (index !== -1) {
+        openMediaItems(uniqueImages, index);
+      }
+    });
+
+    bindHoldToOpen(img, () => {
+      const index = uniqueImages.findIndex((item) => item.src === img.src);
+      return {
+        items: uniqueImages,
+        index: index !== -1 ? index : 0
+      };
+    });
+  });
+
+  const profileImg = document.querySelector(".profile-static img");
+  if (profileImg) {
+    profileImg.style.cursor = "zoom-in";
+    profileImg.addEventListener("click", () => {
+      if (profileImg.dataset.wasHold === "true") {
+        profileImg.dataset.wasHold = "false";
+        return;
+      }
+      openRawMediaViewer({
+        type: "image",
+        src: profileImg.src,
+        alt: profileImg.alt || "Carl Louis Profile",
+        description: "Carl Louis - BEng Aerospace Engineering graduate, Singapore Institute of Technology."
+      });
+    });
+
+    bindHoldToOpen(profileImg, () => ({
+      item: {
+        type: "image",
+        src: profileImg.src,
+        alt: profileImg.alt || "Carl Louis Profile",
+        description: "Carl Louis - BEng Aerospace Engineering graduate, Singapore Institute of Technology."
+      }
+    }));
+  }
 
   tick();
 }
@@ -571,8 +708,6 @@ const mediaViewerClose = document.getElementById("media-viewer-close");
 const mediaViewerDisplay = document.getElementById("media-viewer-display");
 const mediaViewerTitle = document.getElementById("media-viewer-title");
 const mediaViewerDescription = document.getElementById("media-viewer-description");
-const mediaViewerPrev = document.getElementById("media-viewer-prev");
-const mediaViewerNext = document.getElementById("media-viewer-next");
 
 let mediaViewerItems = [];
 let mediaViewerIndex = 0;
@@ -1873,6 +2008,7 @@ function renderMediaViewerItem(item) {
   mediaViewerDisplay.innerHTML = "";
   mediaViewerOverlay.classList.toggle("pdf-active", item.type === "pdf");
   mediaViewerOverlay.classList.toggle("has-sequence", mediaViewerItems.length > 1);
+  mediaViewerOverlay.classList.toggle("image-mode", item.type === "image");
 
   // Title selection
   let displayTitle = item.alt || item.label || "Asset view";
@@ -1888,6 +2024,11 @@ function renderMediaViewerItem(item) {
     img.src = item.src;
     img.alt = displayTitle;
     mediaViewerDisplay.appendChild(img);
+
+    const tag = document.createElement("div");
+    tag.className = "media-viewer-tag";
+    tag.textContent = displayTitle;
+    mediaViewerDisplay.appendChild(tag);
   } else if (item.type === "video") {
     const video = document.createElement("video");
     video.src = item.src;
@@ -1955,6 +2096,8 @@ function closeMediaViewer() {
   mediaViewerOverlay.classList.remove("pdf-active");
   mediaViewerOverlay.classList.remove("raw-active");
   mediaViewerOverlay.classList.remove("has-sequence");
+  mediaViewerOverlay.classList.remove("peeking");
+  mediaViewerOverlay.classList.remove("image-mode");
   mediaViewerOverlay.setAttribute("aria-hidden", "true");
   mediaViewerDisplay.innerHTML = "";
   mediaViewerItems = [];
@@ -1963,11 +2106,34 @@ function closeMediaViewer() {
 
 // Media Viewer Action Listeners
 mediaViewerClose.addEventListener("click", closeMediaViewer);
-mediaViewerPrev?.addEventListener("click", () => showAdjacentMedia(-1));
-mediaViewerNext?.addEventListener("click", () => showAdjacentMedia(1));
 mediaViewerOverlay.addEventListener("click", (e) => {
   if (e.target === mediaViewerOverlay) closeMediaViewer();
 });
+
+// Mobile touch swipe gestures for lightbox navigation
+let touchStartX = 0;
+let touchStartY = 0;
+mediaViewerOverlay.addEventListener("touchstart", (e) => {
+  touchStartX = e.changedTouches[0].screenX;
+  touchStartY = e.changedTouches[0].screenY;
+}, { passive: true });
+
+mediaViewerOverlay.addEventListener("touchend", (e) => {
+  const touchEndX = e.changedTouches[0].screenX;
+  const touchEndY = e.changedTouches[0].screenY;
+  
+  const diffX = touchEndX - touchStartX;
+  const diffY = touchEndY - touchStartY;
+  
+  // Verify horizontal gesture and drag threshold
+  if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 42) {
+    if (diffX < 0) {
+      showAdjacentMedia(1); // Swipe left -> Next
+    } else {
+      showAdjacentMedia(-1); // Swipe right -> Prev
+    }
+  }
+}, { passive: true });
 
 const fieldNotesSection = document.getElementById("field-notes");
 let fieldNotesRendered = false;

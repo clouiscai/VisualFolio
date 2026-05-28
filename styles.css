@@ -747,6 +747,9 @@ h3 {
   object-fit: cover;
   opacity: 0.85;
   transition: opacity 280ms ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .profile-static:hover img {
@@ -815,6 +818,9 @@ h3 {
   object-fit: cover;
   opacity: 0.8;
   transition: opacity 280ms ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .roll-frame:hover img {
@@ -1200,11 +1206,27 @@ h3 {
 }
 
 .note-media::after {
-  background:
-    linear-gradient(120deg, transparent 0 44%, rgba(248, 202, 212, 0.14) 45% 46%, transparent 47%),
-    radial-gradient(circle at 50% 55%, rgba(244, 182, 194, 0.1), transparent 35%);
   z-index: 2;
   opacity: 0.72;
+}
+
+/* Category-specific diagonal glare lines (all pink) */
+.note-card[data-field-category="work"] .note-media::after {
+  background:
+    linear-gradient(135deg, transparent 0 47%, rgba(244, 182, 194, 0.22) 48%, rgba(255, 255, 255, 0.5) 48.8% 49.2%, rgba(244, 182, 194, 0.22) 50%, transparent 51%),
+    radial-gradient(circle at 82% 25%, rgba(244, 182, 194, 0.14), transparent 40%);
+}
+
+.note-card[data-field-category="random"] .note-media::after {
+  background:
+    linear-gradient(105deg, transparent 0 40%, rgba(244, 182, 194, 0.15) 41% 41.5%, transparent 42.5% 44.5%, rgba(244, 182, 194, 0.15) 45.5% 46%, transparent 47%),
+    radial-gradient(circle at 25% 32%, rgba(244, 182, 194, 0.14), transparent 40%);
+}
+
+.note-card[data-field-category="people"] .note-media::after {
+  background:
+    linear-gradient(150deg, transparent 0 35%, rgba(244, 182, 194, 0.08) 45% 55%, transparent 65%),
+    radial-gradient(circle at 68% 42%, rgba(244, 182, 194, 0.14), transparent 40%);
 }
 
 .note-preview-media {
@@ -1232,149 +1254,132 @@ h3 {
   z-index: 2;
   width: 180px;
   height: 180px;
-  animation: driftOrbit 20s linear infinite;
-  transition: border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
   pointer-events: none;
+  border-radius: 50%;
+  border: none;
+  transition: transform 220ms ease;
 }
 
-/* ── 1. WORK CARD: HUD Target Box (Square) ── */
+/* ── 1. WORK CARD: Blue-White/Pink Hypergiant Star (4-Point Spikes, Pink) ── */
 .note-card[data-field-category="work"] .note-orbit {
-  border-radius: 4px;
-  border: 1px dashed rgba(244, 182, 194, 0.16);
+  top: 15%;
+  right: 8%;
   background:
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.95) 0%, rgba(244, 182, 194, 0.26) 4%, rgba(244, 182, 194, 0.06) 12%, transparent 22%),
-    radial-gradient(circle at 50% 50%, transparent 0 20%, rgba(244, 182, 194, 0.14) 21% 22.5%, transparent 23.5%);
-  animation: driftOrbit 24s linear infinite;
+    radial-gradient(circle at 50% 50%, #ffffff 0%, rgba(244, 182, 194, 0.55) 6%, rgba(244, 182, 194, 0.12) 20%, transparent 55%);
+  animation: driftOrbit 60s linear infinite;
 }
 
 .note-card[data-field-category="work"] .note-orbit::before,
 .note-card[data-field-category="work"] .note-orbit::after {
   position: absolute;
   content: "";
-  background: rgba(244, 182, 194, 0.38);
-  transition: background 220ms ease;
+  transition: opacity 220ms ease;
 }
 
 .note-card[data-field-category="work"] .note-orbit::before {
   top: 50%;
-  left: 30%;
-  width: 40%;
-  height: 1px;
+  left: 10%;
+  width: 80%;
+  height: 1.5px;
   transform: translateY(-50%);
+  background: linear-gradient(90deg, transparent, rgba(244, 182, 194, 0.6) 50%, transparent);
 }
 
 .note-card[data-field-category="work"] .note-orbit::after {
   left: 50%;
-  top: 30%;
-  width: 1px;
-  height: 40%;
+  top: 10%;
+  width: 1.5px;
+  height: 80%;
   transform: translateX(-50%);
+  background: linear-gradient(180deg, transparent, rgba(244, 182, 194, 0.6) 50%, transparent);
 }
 
 .note-card[data-field-category="work"]:hover .note-orbit {
-  border-color: rgba(244, 182, 194, 0.36);
-  box-shadow: 0 0 24px rgba(244, 182, 194, 0.08);
   background:
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 1) 0%, rgba(244, 182, 194, 0.36) 4%, rgba(244, 182, 194, 0.12) 12%, transparent 22%),
-    radial-gradient(circle at 50% 50%, transparent 0 20%, rgba(244, 182, 194, 0.24) 21% 22.5%, transparent 23.5%);
+    radial-gradient(circle at 50% 50%, #ffffff 0%, rgba(244, 182, 194, 0.7) 6%, rgba(244, 182, 194, 0.18) 22%, transparent 60%);
 }
 
-.note-card[data-field-category="work"]:hover .note-orbit::before,
-.note-card[data-field-category="work"]:hover .note-orbit::after {
-  background: rgba(244, 182, 194, 0.65);
-}
-
-/* ── 2. RANDOM CARD: Broken Diagnostic Ring & Asymmetric Glitch lines ── */
+/* ── 2. RANDOM CARD: Warm Pink Star with Dust Ring (Slow & Warm) ── */
 .note-card[data-field-category="random"] .note-orbit {
-  border-radius: 50%;
-  border: 1px solid transparent;
-  border-top-color: rgba(244, 182, 194, 0.22);
-  border-bottom-color: rgba(244, 182, 194, 0.22);
+  top: 22%;
+  left: 12%;
+  right: auto;
   background:
-    radial-gradient(circle at 48% 52%, rgba(255, 255, 255, 0.95) 0%, rgba(216, 180, 248, 0.28) 5%, rgba(216, 180, 248, 0.06) 15%, transparent 25%);
-  animation: driftOrbit 6s linear infinite;
+    radial-gradient(circle at 50% 50%, #ffffff 0%, rgba(244, 182, 194, 0.52) 6%, rgba(244, 182, 194, 0.1) 24%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, transparent 0 35%, rgba(244, 182, 194, 0.08) 36% 37.5%, transparent 38.5%);
+  animation: driftOrbit 72s linear infinite;
 }
 
 .note-card[data-field-category="random"] .note-orbit::before,
 .note-card[data-field-category="random"] .note-orbit::after {
   position: absolute;
   content: "";
-  background: rgba(244, 182, 194, 0.32);
-  transition: background 220ms ease;
+  transition: opacity 220ms ease;
 }
 
 .note-card[data-field-category="random"] .note-orbit::before {
-  top: 36%;
-  left: 10%;
-  width: 60%;
-  height: 1px;
+  top: 50%;
+  left: 15%;
+  width: 70%;
+  height: 1.5px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, transparent, rgba(244, 182, 194, 0.48) 50%, transparent);
 }
 
 .note-card[data-field-category="random"] .note-orbit::after {
-  left: 62%;
+  left: 50%;
   top: 15%;
-  width: 1px;
+  width: 1.5px;
   height: 70%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, transparent, rgba(244, 182, 194, 0.48) 50%, transparent);
 }
 
 .note-card[data-field-category="random"]:hover .note-orbit {
-  border-top-color: rgba(244, 182, 194, 0.45);
-  border-bottom-color: rgba(244, 182, 194, 0.45);
-  box-shadow: 0 0 24px rgba(244, 182, 194, 0.08);
   background:
-    radial-gradient(circle at 48% 52%, rgba(255, 255, 255, 1) 0%, rgba(216, 180, 248, 0.4) 5%, rgba(216, 180, 248, 0.12) 15%, transparent 25%);
+    radial-gradient(circle at 50% 50%, #ffffff 0%, rgba(244, 182, 194, 0.65) 6%, rgba(244, 182, 194, 0.15) 24%, transparent 60%),
+    radial-gradient(ellipse at 50% 50%, transparent 0 35%, rgba(244, 182, 194, 0.16) 36% 37.5%, transparent 38.5%);
 }
 
-.note-card[data-field-category="random"]:hover .note-orbit::before,
-.note-card[data-field-category="random"]:hover .note-orbit::after {
-  background: rgba(244, 182, 194, 0.6);
-}
-
-/* ── 3. PEOPLE CARD: Dotted Ring, Sonar Sweep & Satellite Node ── */
+/* ── 3. PEOPLE CARD: Binary Star System (Double Star with soft Rose/Pink glow) ── */
 .note-card[data-field-category="people"] .note-orbit {
-  border-radius: 50%;
-  border: 1px dotted rgba(244, 182, 194, 0.18);
+  top: 32%;
+  right: 24%;
   background:
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.95) 0%, rgba(244, 182, 194, 0.3) 4%, transparent 16%),
-    radial-gradient(circle at 75% 30%, rgba(244, 182, 194, 0.4) 0%, rgba(244, 182, 194, 0.08) 8%, transparent 14%);
-  animation: driftOrbit 16s linear infinite;
+    radial-gradient(circle at 44% 44%, #ffffff 0%, rgba(244, 182, 194, 0.55) 6%, rgba(244, 182, 194, 0.12) 20%, transparent 50%),
+    radial-gradient(circle at 62% 62%, #ffffff 0%, rgba(244, 182, 194, 0.45) 4%, rgba(244, 182, 194, 0.1) 12%, transparent 22%);
+  animation: driftOrbit 50s linear infinite;
 }
 
-.note-card[data-field-category="people"] .note-orbit::before {
-  position: absolute;
-  content: "";
-  top: 50%;
-  left: 50%;
-  width: 50%;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(244, 182, 194, 0.52), transparent);
-  transform-origin: left center;
-  transform: translateY(-50%);
-  transition: background 220ms ease;
-}
-
+.note-card[data-field-category="people"] .note-orbit::before,
 .note-card[data-field-category="people"] .note-orbit::after {
   position: absolute;
   content: "";
-  top: 50%;
-  left: 50%;
-  width: 35%;
+  transition: opacity 220ms ease;
+}
+
+.note-card[data-field-category="people"] .note-orbit::before {
+  top: 44%;
+  left: 12%;
+  width: 64%;
   height: 1px;
-  background: linear-gradient(38deg, rgba(244, 182, 194, 0.22), transparent);
-  transform-origin: left center;
-  transform: rotate(-38deg) translateY(-50%);
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, transparent, rgba(244, 182, 194, 0.45) 50%, transparent);
+}
+
+.note-card[data-field-category="people"] .note-orbit::after {
+  left: 44%;
+  top: 12%;
+  width: 1px;
+  height: 64%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, transparent, rgba(244, 182, 194, 0.45) 50%, transparent);
 }
 
 .note-card[data-field-category="people"]:hover .note-orbit {
-  border-color: rgba(244, 182, 194, 0.36);
-  box-shadow: 0 0 24px rgba(244, 182, 194, 0.08);
   background:
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 1) 0%, rgba(244, 182, 194, 0.42) 4%, transparent 16%),
-    radial-gradient(circle at 75% 30%, rgba(244, 182, 194, 0.6) 0%, rgba(244, 182, 194, 0.15) 8%, transparent 14%);
-}
-
-.note-card[data-field-category="people"]:hover .note-orbit::before {
-  background: linear-gradient(90deg, rgba(244, 182, 194, 0.75), transparent);
+    radial-gradient(circle at 44% 44%, #ffffff 0%, rgba(244, 182, 194, 0.68) 6%, rgba(244, 182, 194, 0.18) 20%, transparent 50%),
+    radial-gradient(circle at 62% 62%, #ffffff 0%, rgba(244, 182, 194, 0.55) 4%, rgba(244, 182, 194, 0.15) 12%, transparent 22%);
 }
 
 .note-copy {
@@ -1582,7 +1587,7 @@ h3 {
   }
 
   .profile-stack {
-    min-height: 280px;
+    min-height: 224px;
   }
 
   .photo-roll {
@@ -1603,7 +1608,7 @@ h3 {
 
   .roll-frame {
     flex: 0 0 auto;
-    width: 300px;
+    width: 240px;
     aspect-ratio: 4 / 3;
   }
 
@@ -1755,7 +1760,7 @@ h3 {
   }
 
   .profile-stack {
-    min-height: 230px;
+    min-height: 184px;
   }
 
   .photo-roll {
@@ -1769,7 +1774,7 @@ h3 {
   }
 
   .roll-frame {
-    width: 240px;
+    width: 192px;
     border-radius: 4px;
   }
 
@@ -3450,6 +3455,35 @@ body.modal-open {
   visibility: visible;
 }
 
+.media-viewer-overlay.peeking {
+  pointer-events: none;
+}
+
+.media-viewer-overlay.image-mode .media-viewer-container {
+  grid-template-columns: 1fr;
+}
+
+.media-viewer-overlay.image-mode .media-viewer-sidebar {
+  display: none;
+}
+
+.media-viewer-tag {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 10;
+  padding: 6px 12px;
+  background: var(--pink);
+  color: var(--space);
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 12px rgba(244, 182, 194, 0.3);
+}
+
 .media-viewer-container {
   display: grid;
   grid-template-columns: 1fr 380px;
@@ -3622,36 +3656,6 @@ body.modal-open {
   background: rgba(244, 182, 194, 0.08);
 }
 
-.media-viewer-nav {
-  position: absolute;
-  top: 50%;
-  z-index: 210;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 72px;
-  border: 1px solid rgba(244, 182, 194, 0.18);
-  border-radius: 4px;
-  background: rgba(7, 11, 20, 0.54);
-  color: var(--pink);
-  font-size: 2rem;
-  transform: translateY(-50%);
-  cursor: pointer;
-}
-
-.media-viewer-overlay.has-sequence .media-viewer-nav {
-  display: flex;
-}
-
-.media-viewer-prev {
-  left: 18px;
-}
-
-.media-viewer-next {
-  right: 18px;
-}
-
 .modal-media-slot {
   cursor: pointer;
 }
@@ -3705,20 +3709,6 @@ body.modal-open {
     width: 38px;
     height: 38px;
     font-size: 1rem;
-  }
-
-  .media-viewer-nav {
-    width: 34px;
-    height: 50px;
-    font-size: 1.25rem;
-  }
-
-  .media-viewer-prev {
-    left: 8px;
-  }
-
-  .media-viewer-next {
-    right: 8px;
   }
 
   .media-viewer-sidebar {
