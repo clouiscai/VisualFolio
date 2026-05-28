@@ -801,6 +801,8 @@ function initModalScene(projectId) {
   const canvas = document.querySelector("#modalScene");
   if (!canvas) return;
 
+  let lastTime = performance.now();
+
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   modalRenderer = renderer;
@@ -1180,6 +1182,14 @@ function initModalScene(projectId) {
     frameGroup.position.set(0, -0.05, 0);
     group.add(frameGroup);
 
+    let springPosition = 0.0;
+    let springVelocity = 0.0;
+    let dragSpeedAccum = 0.0;
+
+    const airframeUniforms = {
+      uBendFactor: { value: 0.0 }
+    };
+
     const loader = new GLTFLoader();
     const pinkModelMaterial = new THREE.MeshStandardMaterial({
       color: rose,
@@ -1189,6 +1199,33 @@ function initModalScene(projectId) {
       emissiveIntensity: 0.22,
     });
 
+    const airframeMaterial = new THREE.MeshStandardMaterial({
+      color: rose,
+      metalness: 0.42,
+      roughness: 0.36,
+      emissive: new THREE.Color("#35131e"),
+      emissiveIntensity: 0.22,
+    });
+
+    airframeMaterial.onBeforeCompile = (shader) => {
+      shader.uniforms.uBendFactor = airframeUniforms.uBendFactor;
+
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <common>',
+        `#include <common>
+        uniform float uBendFactor;
+        varying vec3 vLocalPosition;`
+      );
+
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>
+        vLocalPosition = position;
+        float distSq = position.x * position.x + position.z * position.z;
+        transformed.y += uBendFactor * distSq * 0.15;`
+      );
+    };
+
     loader.load(
       isFwishModel
         ? "./assets/projects/fwish-personal-ground-effect-craft/Model_V0.2a.glb"
@@ -1197,7 +1234,7 @@ function initModalScene(projectId) {
         const model = gltf.scene;
         model.traverse((object) => {
           if (object.isMesh) {
-            object.material = pinkModelMaterial;
+            object.material = isFwishModel ? pinkModelMaterial : airframeMaterial;
             object.castShadow = true;
             object.receiveShadow = true;
           }
@@ -1221,7 +1258,7 @@ function initModalScene(projectId) {
 
     const q0 = isFwishModel
       ? new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, -Math.PI / 2, order))
-      : new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI, order));
+      : new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 4, 0, Math.PI, order));
 
     const qDefault = isFwishModel
       ? q0.clone().multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -Math.PI / 4, (135 * Math.PI) / 180, order)))
@@ -1233,6 +1270,8 @@ function initModalScene(projectId) {
     let isDragging = false;
     let previousX = 0;
     let previousY = 0;
+    let startPointerX = 0;
+    let startPointerY = 0;
     const minZoom = 5.5 / 2;
     const maxZoom = 5.5 / 0.7;
 
@@ -1252,6 +1291,9 @@ function initModalScene(projectId) {
     const onPointerDown = (event) => {
       activePointers.set(event.pointerId, event);
       canvas.setPointerCapture?.(event.pointerId);
+
+      startPointerX = event.clientX;
+      startPointerY = event.clientY;
 
       const now = Date.now();
       if (activePointers.size === 1) {
@@ -1286,18 +1328,16 @@ function initModalScene(projectId) {
         previousX = event.clientX;
         previousY = event.clientY;
 
-        // Dragging vertically rotates around the screen X axis (Pitch in screen frame)
-        // Dragging horizontally rotates around the screen Y axis (Yaw in screen frame)
+        if (!isFwishModel) {
+          const currentDragSpeed = Math.hypot(deltaX, deltaY);
+          dragSpeedAccum += (currentDragSpeed - dragSpeedAccum) * 0.25;
+        }
+
         const deltaPitch = deltaY * 0.008;
         const deltaYaw = deltaX * 0.008;
 
-        // Create an incremental rotation quaternion for the screen axes (YXZ order)
         const qDiff = new THREE.Quaternion().setFromEuler(new THREE.Euler(deltaPitch, deltaYaw, 0, 'YXZ'));
-
-        // Apply the rotation relative to the screen (premultiply)
         frameGroup.quaternion.premultiply(qDiff);
-
-        // Track target quaternion to match free drag
         qTarget.copy(frameGroup.quaternion);
       } else if (activePointers.size === 2) {
         const pointers = Array.from(activePointers.values());
@@ -1327,23 +1367,35 @@ function initModalScene(projectId) {
         if (wasDragging) {
           isDragging = false;
 
-          // Decompose the current orientation relative to the default orientation q0
           const q0Inv = q0.clone().invert();
           const qRel = q0Inv.clone().multiply(frameGroup.quaternion);
           const eulerRel = new THREE.Euler().setFromQuaternion(qRel, order);
 
-          // Snap relative Euler angles to 45 degree steps
           const snappedX = snapTo45(eulerRel.x);
           const snappedY = snapTo45(eulerRel.y);
           const snappedZ = snapTo45(eulerRel.z);
 
-          // Rebuild target orientation
           const targetEuler = new THREE.Euler(snappedX, snappedY, snappedZ, order);
           const qTargetRel = new THREE.Quaternion().setFromEuler(targetEuler);
           qTarget.copy(q0.clone().multiply(qTargetRel));
+        } else {
+          // Check for tap event to trigger elasticity physics
+          const dist = Math.hypot(event.clientX - startPointerX, event.clientY - startPointerY);
+          if (dist < 5) {
+            const rect = canvas.getBoundingClientRect();
+            const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+            const intersects = raycaster.intersectObjects(frameGroup.children, true);
+
+            if (intersects.length > 0 && !isFwishModel) {
+              springVelocity = -12.0; // Apply tap impulse to the spring
+            }
+          }
         }
       } else if (activePointers.size === 1) {
-        // Resume dragging with the remaining pointer
         isDragging = true;
         const remaining = activePointers.values().next().value;
         previousX = remaining.clientX;
@@ -1368,19 +1420,33 @@ function initModalScene(projectId) {
     const pinTop = document.getElementById("modal-pin-top");
     if (pinTop) pinTop.style.display = isFwishModel ? "" : "none";
 
-    modalExtraAnimation = (seconds) => {
+    modalExtraAnimation = (seconds, dt) => {
       if (!isDragging && activePointers.size === 0) {
-        // Smoothly interpolate towards locked 45 degree multiples on release via slerp
         frameGroup.quaternion.slerp(qTarget, 0.12);
       }
 
-      // Smoothly interpolate Z position (zoom)
       if (Math.abs(camera.position.z - zoomTargetZ) > 0.001) {
         camera.position.z += (zoomTargetZ - camera.position.z) * 0.15;
         camera.updateProjectionMatrix();
       }
 
-      // Calculate relative orientation in the model's reference frame
+      // Update spring physics for elasticity animation
+      if (!isFwishModel) {
+        if (!isDragging) {
+          dragSpeedAccum += (0.0 - dragSpeedAccum) * 0.15;
+        }
+
+        const dragForce = -dragSpeedAccum * 2.0;
+
+        const stiffness = 160.0;
+        const damping = 9.0;
+        const acceleration = -stiffness * springPosition - damping * springVelocity + dragForce;
+        springVelocity += acceleration * dt;
+        springPosition += springVelocity * dt;
+
+        airframeUniforms.uBendFactor.value = springPosition;
+      }
+
       const q0Inv = q0.clone().invert();
       const qRel = q0Inv.clone().multiply(frameGroup.quaternion);
       const eulerRel = new THREE.Euler().setFromQuaternion(qRel, order);
@@ -1394,12 +1460,10 @@ function initModalScene(projectId) {
 
       let pitchVal, rollVal, yawVal;
       if (isFwishModel) {
-        // YXZ sequence: y = Roll, x = Pitch, z = Yaw. Pitch is inverted.
         pitchVal = -toDegrees(eulerRel.x);
         rollVal = toDegrees(eulerRel.y);
         yawVal = toDegrees(eulerRel.z);
       } else {
-        // ZXY sequence: x = Pitch, y = Yaw, z = Roll
         pitchVal = toDegrees(eulerRel.x);
         rollVal = toDegrees(eulerRel.z);
         yawVal = toDegrees(eulerRel.y);
@@ -1537,12 +1601,16 @@ function initModalScene(projectId) {
     if (!modalSceneInstance || !modalRenderer || !modalCamera) return;
     const seconds = time * 0.001;
 
+    const now = performance.now();
+    const dt = Math.min((now - lastTime) * 0.001, 0.1);
+    lastTime = now;
+
     if (modalGroup && modalAutoRotate) {
       modalGroup.rotation.y = seconds * 0.1;
     }
 
     if (modalExtraAnimation) {
-      modalExtraAnimation(seconds);
+      modalExtraAnimation(seconds, dt);
     }
 
     modalRenderer.render(modalSceneInstance, modalCamera);
@@ -2121,10 +2189,10 @@ mediaViewerOverlay.addEventListener("touchstart", (e) => {
 mediaViewerOverlay.addEventListener("touchend", (e) => {
   const touchEndX = e.changedTouches[0].screenX;
   const touchEndY = e.changedTouches[0].screenY;
-  
+
   const diffX = touchEndX - touchStartX;
   const diffY = touchEndY - touchStartY;
-  
+
   // Verify horizontal gesture and drag threshold
   if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 42) {
     if (diffX < 0) {

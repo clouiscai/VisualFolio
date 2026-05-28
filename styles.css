@@ -421,7 +421,7 @@ h3 {
 
 .about .section-kicker h2 {
   max-width: none;
-  font-size: clamp(2.75rem, 3.2vw, 4rem);
+  font-size: clamp(2.25rem, 2.55vw, 2.85rem);
 }
 
 .about-closing {
@@ -601,7 +601,7 @@ h3 {
 .identity-copy h2 {
   margin-bottom: 12px;
   color: var(--white);
-  font-size: clamp(2.25rem, 2.55vw, 2.85rem);
+  font-size: clamp(2.75rem, 3.2vw, 4rem);
   line-height: 0.95;
 }
 
