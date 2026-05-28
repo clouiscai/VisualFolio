@@ -1013,8 +1013,8 @@ h3 {
 
 .media-thermal {
   background:
-    radial-gradient(circle at 68% 42%, rgba(216, 180, 248, 0.2), transparent 24%),
-    linear-gradient(150deg, #07101c, #151d2e 62%, #070b14);
+    radial-gradient(circle at 68% 42%, rgba(216, 180, 248, 0.08), transparent 24%),
+    linear-gradient(150deg, #03080e, #0a0e16 62%, #03050a);
 }
 
 .media-edl {
@@ -1071,6 +1071,15 @@ h3 {
 .project-card:hover .card-img {
   opacity: 1;
   transform: scale(1.03);
+}
+
+[data-project="fwish-gev"] .card-img.contain {
+  transform: scale(1.2);
+}
+
+[data-project="fwish-gev"]:hover .card-img.contain {
+  opacity: 1;
+  transform: scale(1.236);
 }
 
 .media-label {
@@ -1223,9 +1232,149 @@ h3 {
   z-index: 2;
   width: 180px;
   height: 180px;
-  border: 1px solid rgba(244, 182, 194, 0.13);
+  animation: driftOrbit 20s linear infinite;
+  transition: border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+  pointer-events: none;
+}
+
+/* ── 1. WORK CARD: HUD Target Box (Square) ── */
+.note-card[data-field-category="work"] .note-orbit {
+  border-radius: 4px;
+  border: 1px dashed rgba(244, 182, 194, 0.16);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.95) 0%, rgba(244, 182, 194, 0.26) 4%, rgba(244, 182, 194, 0.06) 12%, transparent 22%),
+    radial-gradient(circle at 50% 50%, transparent 0 20%, rgba(244, 182, 194, 0.14) 21% 22.5%, transparent 23.5%);
+  animation: driftOrbit 24s linear infinite;
+}
+
+.note-card[data-field-category="work"] .note-orbit::before,
+.note-card[data-field-category="work"] .note-orbit::after {
+  position: absolute;
+  content: "";
+  background: rgba(244, 182, 194, 0.38);
+  transition: background 220ms ease;
+}
+
+.note-card[data-field-category="work"] .note-orbit::before {
+  top: 50%;
+  left: 30%;
+  width: 40%;
+  height: 1px;
+  transform: translateY(-50%);
+}
+
+.note-card[data-field-category="work"] .note-orbit::after {
+  left: 50%;
+  top: 30%;
+  width: 1px;
+  height: 40%;
+  transform: translateX(-50%);
+}
+
+.note-card[data-field-category="work"]:hover .note-orbit {
+  border-color: rgba(244, 182, 194, 0.36);
+  box-shadow: 0 0 24px rgba(244, 182, 194, 0.08);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 1) 0%, rgba(244, 182, 194, 0.36) 4%, rgba(244, 182, 194, 0.12) 12%, transparent 22%),
+    radial-gradient(circle at 50% 50%, transparent 0 20%, rgba(244, 182, 194, 0.24) 21% 22.5%, transparent 23.5%);
+}
+
+.note-card[data-field-category="work"]:hover .note-orbit::before,
+.note-card[data-field-category="work"]:hover .note-orbit::after {
+  background: rgba(244, 182, 194, 0.65);
+}
+
+/* ── 2. RANDOM CARD: Broken Diagnostic Ring & Asymmetric Glitch lines ── */
+.note-card[data-field-category="random"] .note-orbit {
   border-radius: 50%;
-  animation: driftOrbit 18s linear infinite;
+  border: 1px solid transparent;
+  border-top-color: rgba(244, 182, 194, 0.22);
+  border-bottom-color: rgba(244, 182, 194, 0.22);
+  background:
+    radial-gradient(circle at 48% 52%, rgba(255, 255, 255, 0.95) 0%, rgba(216, 180, 248, 0.28) 5%, rgba(216, 180, 248, 0.06) 15%, transparent 25%);
+  animation: driftOrbit 6s linear infinite;
+}
+
+.note-card[data-field-category="random"] .note-orbit::before,
+.note-card[data-field-category="random"] .note-orbit::after {
+  position: absolute;
+  content: "";
+  background: rgba(244, 182, 194, 0.32);
+  transition: background 220ms ease;
+}
+
+.note-card[data-field-category="random"] .note-orbit::before {
+  top: 36%;
+  left: 10%;
+  width: 60%;
+  height: 1px;
+}
+
+.note-card[data-field-category="random"] .note-orbit::after {
+  left: 62%;
+  top: 15%;
+  width: 1px;
+  height: 70%;
+}
+
+.note-card[data-field-category="random"]:hover .note-orbit {
+  border-top-color: rgba(244, 182, 194, 0.45);
+  border-bottom-color: rgba(244, 182, 194, 0.45);
+  box-shadow: 0 0 24px rgba(244, 182, 194, 0.08);
+  background:
+    radial-gradient(circle at 48% 52%, rgba(255, 255, 255, 1) 0%, rgba(216, 180, 248, 0.4) 5%, rgba(216, 180, 248, 0.12) 15%, transparent 25%);
+}
+
+.note-card[data-field-category="random"]:hover .note-orbit::before,
+.note-card[data-field-category="random"]:hover .note-orbit::after {
+  background: rgba(244, 182, 194, 0.6);
+}
+
+/* ── 3. PEOPLE CARD: Dotted Ring, Sonar Sweep & Satellite Node ── */
+.note-card[data-field-category="people"] .note-orbit {
+  border-radius: 50%;
+  border: 1px dotted rgba(244, 182, 194, 0.18);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.95) 0%, rgba(244, 182, 194, 0.3) 4%, transparent 16%),
+    radial-gradient(circle at 75% 30%, rgba(244, 182, 194, 0.4) 0%, rgba(244, 182, 194, 0.08) 8%, transparent 14%);
+  animation: driftOrbit 16s linear infinite;
+}
+
+.note-card[data-field-category="people"] .note-orbit::before {
+  position: absolute;
+  content: "";
+  top: 50%;
+  left: 50%;
+  width: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(244, 182, 194, 0.52), transparent);
+  transform-origin: left center;
+  transform: translateY(-50%);
+  transition: background 220ms ease;
+}
+
+.note-card[data-field-category="people"] .note-orbit::after {
+  position: absolute;
+  content: "";
+  top: 50%;
+  left: 50%;
+  width: 35%;
+  height: 1px;
+  background: linear-gradient(38deg, rgba(244, 182, 194, 0.22), transparent);
+  transform-origin: left center;
+  transform: rotate(-38deg) translateY(-50%);
+}
+
+.note-card[data-field-category="people"]:hover .note-orbit {
+  border-color: rgba(244, 182, 194, 0.36);
+  box-shadow: 0 0 24px rgba(244, 182, 194, 0.08);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 1) 0%, rgba(244, 182, 194, 0.42) 4%, transparent 16%),
+    radial-gradient(circle at 75% 30%, rgba(244, 182, 194, 0.6) 0%, rgba(244, 182, 194, 0.15) 8%, transparent 14%);
+}
+
+.note-card[data-field-category="people"]:hover .note-orbit::before {
+  background: linear-gradient(90deg, rgba(244, 182, 194, 0.75), transparent);
 }
 
 .note-copy {
@@ -2124,7 +2273,7 @@ body.modal-open {
   gap: 6px;
 }
 
-.modal-visual-frame.fwish-model-mode .modal-pin {
+.modal-visual-frame.uav-airframe-mode .modal-pin {
   display: none;
 }
 
@@ -2874,7 +3023,7 @@ body.modal-open {
 
   .modal-visual-frame {
     order: 2;
-    min-height: 320px;
+    min-height: 50vh;
     border-left: none;
     border-top: 1px solid rgba(148, 163, 184, 0.08);
     border-bottom: none;
@@ -2891,6 +3040,14 @@ body.modal-open {
   .modal-telemetry {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  [data-project="fwish-gev"] .card-img.contain {
+    transform: scale(1.5);
+  }
+
+  [data-project="fwish-gev"]:hover .card-img.contain {
+    transform: scale(1.545);
+  }
 }
 
 @media (max-width: 620px) {
@@ -2903,7 +3060,7 @@ body.modal-open {
   }
 
   .modal-visual-frame {
-    min-height: 280px;
+    min-height: 50vh;
   }
 
   .modal-visual-frame.timeline-mode {
@@ -3045,7 +3202,7 @@ body.modal-open {
 
 @media (max-width: 380px) {
   .modal-visual-frame {
-    min-height: 240px;
+    min-height: 50vh;
   }
 
   .modal-visual-frame.timeline-mode {

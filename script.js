@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { GLTFLoader } from "https://unpkg.com/three@0.165.0/examples/jsm/loaders/GLTFLoader.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { fieldNoteCategories, fieldNotes } from "./src/data/fieldNotes.js";
 
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -462,34 +462,34 @@ const projectData = {
     type: "STR-01 / Composite Airframe",
     title: "Lightweight Structural Optimised UAV Airframe",
     description:
-      "Redesigned a UAV airframe using structural optimisation workflows in ANSYS to reduce mass while maintaining stiffness under operational loading conditions. The project combined FEA-driven design iteration, and prototype manufacturing validation.",
+      "Redesigned a UAV airframe using structural optimisation workflows in ANSYS to reduce mass while maintaining stiffness under simulated loading conditions. The project combined FEA-driven iteration, topology optimisation, and prototype validation through physical testing.",
     telemetry: [
-      { label: "KEY RESULT", value: "20% Mass Reduction" },
+      { label: "KEY RESULT", value: "20% Structural Mass Reduction" },
     ],
     media: [
       {
         type: "video",
         src: "./assets/projects/lightweight-uav-airframe-structural-optimisation/structural-optimisation.mp4",
         alt: "Topology Structural Optimisation",
-        description: "ANSYS structural optimization simulation showing the iterative material removal to optimize the topology of the chassis center body according to active thrust load stress."
+        description: "ANSYS topology optimisation workflow identifying low-stress regions for material reduction under simulated thrust loading conditions."
       },
       {
         type: "image",
         src: "./assets/projects/lightweight-uav-airframe-structural-optimisation/stress_sim.jpg",
         alt: "FEA Stress Validation",
-        description: "Finite element analysis (FEA) using ANSYS to validate the post-processed topology-optimized model, confirming that stress levels remain within safety constraints while reducing the center body mass by ~50%."
+        description: "Structural stress analysis validating load distribution and stiffness of the optimised airframe geometry under simulated operational loading."
       },
       {
         type: "image",
         src: "./assets/projects/lightweight-uav-airframe-structural-optimisation/parts.jpg",
-        alt: "Optimized Carbon Fiber Arm Plate",
-        description: "Quadcopter components demonstrating the organic topology design applied to the arms. The arm length was increased by 2.5 cm from the baseline model, giving an organic shape while retaining high structural strength."
+        alt: "Optimised Centre Body and Arm Geometry",
+        description: "Prototype parts produced from the topology optimisation workflow to evaluate structural layout and manufacturability."
       },
       {
         type: "video",
         src: "./assets/projects/lightweight-uav-airframe-structural-optimisation/thrust-loading-test.mp4",
         alt: "Dynamic Thrust Loading Test",
-        description: "Dynamic structural test verifying the integrity of the carbon-fiber frame under active propulsion and thrust load forces."
+        description: "Prototype thrust-loading test performed to evaluate structural behaviour and frame stability under active propulsion conditions."
       }
     ],
     tags: ["FEA", "ANSYS", "Topology Optimization", "Resin Printing"],
@@ -649,7 +649,7 @@ function renderFieldNotes() {
 
     const video = card.querySelector("video");
     if (video) {
-      card.addEventListener("mouseenter", () => video.play().catch(() => {}));
+      card.addEventListener("mouseenter", () => video.play().catch(() => { }));
       card.addEventListener("mouseleave", () => {
         video.pause();
         video.currentTime = 0;
@@ -1072,7 +1072,8 @@ function initModalScene(projectId) {
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
         const maxDimension = Math.max(size.x, size.y, size.z) || 1;
-        const scaleFactor = 2.35 / maxDimension;
+        const isMobile = window.innerWidth <= 980;
+        const scaleFactor = (2.35 * (isMobile ? 1.5 : 1.0)) / maxDimension;
         model.scale.setScalar(scaleFactor);
         model.position.copy(center).multiplyScalar(-scaleFactor);
         frameGroup.add(model);
@@ -1080,10 +1081,18 @@ function initModalScene(projectId) {
       undefined,
       (error) => console.warn(`Unable to load ${isFwishModel ? "FWISH" : "airframe"} GLB model:`, error)
     );
+
+    const order = isFwishModel ? "YXZ" : "ZXY";
+
     const q0 = isFwishModel
-      ? new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 4, Math.PI / 4, Math.PI / 4, "ZXY"))
-      : new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI, "ZXY"));
-    frameGroup.quaternion.copy(q0);
+      ? new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, -Math.PI / 2, order))
+      : new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI, order));
+
+    const qDefault = isFwishModel
+      ? q0.clone().multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -Math.PI / 4, (135 * Math.PI) / 180, order)))
+      : q0.clone();
+
+    frameGroup.quaternion.copy(qDefault);
     camera.position.set(0, 0.15, 6.875);
 
     let isDragging = false;
@@ -1092,62 +1101,118 @@ function initModalScene(projectId) {
     const minZoom = 5.5 / 2;
     const maxZoom = 5.5 / 0.7;
 
-    const qTarget = q0.clone();
+    const qTarget = qDefault.clone();
 
     const snapTo45 = (angle) => {
       const step = Math.PI / 4; // 45 degrees in radians
       return Math.round(angle / step) * step;
     };
 
+    const activePointers = new Map();
+    let initialDist = 0;
+    let initialZoomZ = 0;
+    let lastTap = 0;
+    let zoomTargetZ = camera.position.z;
+
     const onPointerDown = (event) => {
-      isDragging = true;
-      previousX = event.clientX;
-      previousY = event.clientY;
+      activePointers.set(event.pointerId, event);
       canvas.setPointerCapture?.(event.pointerId);
+
+      const now = Date.now();
+      if (activePointers.size === 1) {
+        if (now - lastTap < 300) {
+          // Double-tap zoom toggle
+          const defaultZ = 6.875;
+          const zoomedZ = defaultZ / 2;
+          const currentZ = camera.position.z;
+          zoomTargetZ = Math.abs(currentZ - zoomedZ) < Math.abs(currentZ - defaultZ) ? defaultZ : zoomedZ;
+        } else {
+          isDragging = true;
+          previousX = event.clientX;
+          previousY = event.clientY;
+        }
+        lastTap = now;
+      } else if (activePointers.size === 2) {
+        isDragging = false;
+        const pointers = Array.from(activePointers.values());
+        initialDist = Math.hypot(pointers[0].clientX - pointers[1].clientX, pointers[0].clientY - pointers[1].clientY);
+        initialZoomZ = camera.position.z;
+      }
     };
 
     const onPointerMove = (event) => {
-      if (!isDragging) return;
-      const deltaX = event.clientX - previousX;
-      const deltaY = event.clientY - previousY;
-      previousX = event.clientX;
-      previousY = event.clientY;
+      if (activePointers.has(event.pointerId)) {
+        activePointers.set(event.pointerId, event);
+      }
 
-      // Dragging vertically rotates around the screen X axis (Pitch in screen frame)
-      // Dragging horizontally rotates around the screen Y axis (Yaw in screen frame)
-      const deltaPitch = deltaY * 0.008;
-      const deltaYaw = deltaX * 0.008;
+      if (activePointers.size === 1 && isDragging) {
+        const deltaX = event.clientX - previousX;
+        const deltaY = event.clientY - previousY;
+        previousX = event.clientX;
+        previousY = event.clientY;
 
-      // Create an incremental rotation quaternion for the screen axes (YXZ order)
-      const qDiff = new THREE.Quaternion().setFromEuler(new THREE.Euler(deltaPitch, deltaYaw, 0, 'YXZ'));
+        // Dragging vertically rotates around the screen X axis (Pitch in screen frame)
+        // Dragging horizontally rotates around the screen Y axis (Yaw in screen frame)
+        const deltaPitch = deltaY * 0.008;
+        const deltaYaw = deltaX * 0.008;
 
-      // Apply the rotation relative to the screen (premultiply)
-      frameGroup.quaternion.premultiply(qDiff);
+        // Create an incremental rotation quaternion for the screen axes (YXZ order)
+        const qDiff = new THREE.Quaternion().setFromEuler(new THREE.Euler(deltaPitch, deltaYaw, 0, 'YXZ'));
 
-      // Track target quaternion to match free drag
-      qTarget.copy(frameGroup.quaternion);
+        // Apply the rotation relative to the screen (premultiply)
+        frameGroup.quaternion.premultiply(qDiff);
+
+        // Track target quaternion to match free drag
+        qTarget.copy(frameGroup.quaternion);
+      } else if (activePointers.size === 2) {
+        const pointers = Array.from(activePointers.values());
+        const dist = Math.hypot(pointers[0].clientX - pointers[1].clientX, pointers[0].clientY - pointers[1].clientY);
+        if (initialDist > 0 && dist > 0) {
+          const ratio = initialDist / dist;
+          const nextZ = initialZoomZ * ratio;
+          camera.position.z = Math.max(minZoom, Math.min(maxZoom, nextZ));
+          zoomTargetZ = camera.position.z;
+          camera.updateProjectionMatrix();
+        }
+      }
     };
 
     const stopDragging = (event) => {
-      if (isDragging) {
-        isDragging = false;
+      const wasDragging = isDragging;
+      activePointers.delete(event.pointerId);
+      if (event?.pointerId !== undefined) {
+        canvas.releasePointerCapture?.(event.pointerId);
+      }
 
-        // Decompose the current orientation relative to the default orientation q0
-        const q0Inv = q0.clone().invert();
-        const qRel = q0Inv.clone().multiply(frameGroup.quaternion);
-        const eulerRel = new THREE.Euler().setFromQuaternion(qRel, 'ZXY');
+      if (activePointers.size < 2) {
+        initialDist = 0;
+      }
 
-        // Snap relative Euler angles to 45 degree steps (Pitch is X, Yaw is Y, Roll is Z)
-        const snappedPitch = snapTo45(eulerRel.x);
-        const snappedYaw = snapTo45(eulerRel.y);
-        const snappedRoll = snapTo45(eulerRel.z);
+      if (activePointers.size === 0) {
+        if (wasDragging) {
+          isDragging = false;
 
-        // Rebuild target orientation (Pitch is X, Yaw is Y, Roll is Z)
-        const targetEuler = new THREE.Euler(snappedPitch, snappedYaw, snappedRoll, 'ZXY');
-        const qTargetRel = new THREE.Quaternion().setFromEuler(targetEuler);
-        qTarget.copy(q0.clone().multiply(qTargetRel));
+          // Decompose the current orientation relative to the default orientation q0
+          const q0Inv = q0.clone().invert();
+          const qRel = q0Inv.clone().multiply(frameGroup.quaternion);
+          const eulerRel = new THREE.Euler().setFromQuaternion(qRel, order);
 
-        if (event?.pointerId !== undefined) canvas.releasePointerCapture?.(event.pointerId);
+          // Snap relative Euler angles to 45 degree steps
+          const snappedX = snapTo45(eulerRel.x);
+          const snappedY = snapTo45(eulerRel.y);
+          const snappedZ = snapTo45(eulerRel.z);
+
+          // Rebuild target orientation
+          const targetEuler = new THREE.Euler(snappedX, snappedY, snappedZ, order);
+          const qTargetRel = new THREE.Quaternion().setFromEuler(targetEuler);
+          qTarget.copy(q0.clone().multiply(qTargetRel));
+        }
+      } else if (activePointers.size === 1) {
+        // Resume dragging with the remaining pointer
+        isDragging = true;
+        const remaining = activePointers.values().next().value;
+        previousX = remaining.clientX;
+        previousY = remaining.clientY;
       }
     };
 
@@ -1155,6 +1220,7 @@ function initModalScene(projectId) {
       event.preventDefault();
       const nextZ = camera.position.z + Math.sign(event.deltaY) * 0.32;
       camera.position.z = Math.max(minZoom, Math.min(maxZoom, nextZ));
+      zoomTargetZ = camera.position.z;
       camera.updateProjectionMatrix();
     };
 
@@ -1165,18 +1231,24 @@ function initModalScene(projectId) {
     canvas.addEventListener("wheel", onWheel, { passive: false });
 
     const pinTop = document.getElementById("modal-pin-top");
-    if (pinTop) pinTop.style.display = isFwishModel ? "none" : "";
+    if (pinTop) pinTop.style.display = isFwishModel ? "" : "none";
 
     modalExtraAnimation = (seconds) => {
-      if (!isDragging) {
+      if (!isDragging && activePointers.size === 0) {
         // Smoothly interpolate towards locked 45 degree multiples on release via slerp
         frameGroup.quaternion.slerp(qTarget, 0.12);
+      }
+
+      // Smoothly interpolate Z position (zoom)
+      if (Math.abs(camera.position.z - zoomTargetZ) > 0.001) {
+        camera.position.z += (zoomTargetZ - camera.position.z) * 0.15;
+        camera.updateProjectionMatrix();
       }
 
       // Calculate relative orientation in the model's reference frame
       const q0Inv = q0.clone().invert();
       const qRel = q0Inv.clone().multiply(frameGroup.quaternion);
-      const eulerRel = new THREE.Euler().setFromQuaternion(qRel, 'ZXY');
+      const eulerRel = new THREE.Euler().setFromQuaternion(qRel, order);
 
       const toDegrees = (rad) => {
         let deg = Math.round((rad * 180) / Math.PI) % 360;
@@ -1185,11 +1257,20 @@ function initModalScene(projectId) {
         return deg;
       };
 
-      const pitchVal = toDegrees(eulerRel.x);
-      const rollVal = toDegrees(eulerRel.z);
-      const yawVal = toDegrees(eulerRel.y);
+      let pitchVal, rollVal, yawVal;
+      if (isFwishModel) {
+        // YXZ sequence: y = Roll, x = Pitch, z = Yaw. Pitch is inverted.
+        pitchVal = -toDegrees(eulerRel.x);
+        rollVal = toDegrees(eulerRel.y);
+        yawVal = toDegrees(eulerRel.z);
+      } else {
+        // ZXY sequence: x = Pitch, y = Yaw, z = Roll
+        pitchVal = toDegrees(eulerRel.x);
+        rollVal = toDegrees(eulerRel.z);
+        yawVal = toDegrees(eulerRel.y);
+      }
 
-      if (pinTop && !isFwishModel) {
+      if (pinTop && isFwishModel) {
         pinTop.innerHTML = `
           <div class="orientation-telemetry">
             <div class="telemetry-header">
@@ -1522,9 +1603,8 @@ function openModal(projectId) {
             <div class="pdf-card-topline"></div>
             <div class="pdf-card-logos">
               <span>SIT</span>
-              <span>UofG</span>
+              <span>UoG</span>
             </div>
-            <p class="pdf-card-type">CAPSTONE REPORT</p>
             <h4>${item.label || "LES-Based Investigation Report"}</h4>
             <p>LES-Based Investigation of Unsteady Wake Effects on the Rear Wing in Tandem WIG Configuration</p>
             <span class="pdf-card-author">Carl Louis</span>
