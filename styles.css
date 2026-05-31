@@ -3459,13 +3459,7 @@ body.modal-open {
   pointer-events: none;
 }
 
-.media-viewer-overlay.image-mode .media-viewer-container {
-  grid-template-columns: 1fr;
-}
-
-.media-viewer-overlay.image-mode .media-viewer-sidebar {
-  display: none;
-}
+/* image-mode overrides removed to allow description sidebar to be displayed for images */
 
 .media-viewer-tag {
   position: absolute;
@@ -3656,6 +3650,74 @@ body.modal-open {
   background: rgba(244, 182, 194, 0.08);
 }
 
+/* ── Media Viewer Navigation Buttons ── */
+.media-viewer-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 50%;
+  background: rgba(7, 11, 20, 0.58);
+  color: var(--gray);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 180ms ease, border-color 180ms ease, background 180ms ease, transform 180ms ease;
+  user-select: none;
+}
+
+.media-viewer-overlay.has-sequence .media-viewer-nav {
+  display: flex;
+}
+
+.media-viewer-nav.prev {
+  left: 16px;
+}
+
+.media-viewer-nav.next {
+  right: 396px; /* offset to stay clear of the 380px sidebar */
+}
+
+.media-viewer-overlay.pdf-active .media-viewer-nav.next {
+  right: 336px; /* offset to stay clear of the 320px pdf sidebar */
+}
+
+.media-viewer-overlay.raw-active .media-viewer-nav.next {
+  right: 16px; /* raw active mode hides sidebar, so place next button at the edge */
+}
+
+.media-viewer-overlay.no-sidebar .media-viewer-container {
+  grid-template-columns: 1fr;
+}
+
+.media-viewer-overlay.no-sidebar .media-viewer-sidebar {
+  display: none;
+}
+
+.media-viewer-overlay.no-sidebar .media-viewer-nav.next {
+  right: 16px; /* place next button at the right edge since sidebar is hidden */
+}
+
+.media-viewer-nav:hover {
+  color: var(--white);
+  border-color: rgba(244, 182, 194, 0.3);
+  background: rgba(244, 182, 194, 0.08);
+}
+
+.media-viewer-nav.prev:hover {
+  transform: translateY(-50%) scale(1.06) translateX(-2px);
+}
+
+.media-viewer-nav.next:hover {
+  transform: translateY(-50%) scale(1.06) translateX(2px);
+}
+
 .modal-media-slot {
   cursor: pointer;
 }
@@ -3709,6 +3771,10 @@ body.modal-open {
     width: 38px;
     height: 38px;
     font-size: 1rem;
+  }
+
+  .media-viewer-nav {
+    display: none !important;
   }
 
   .media-viewer-sidebar {
@@ -3812,6 +3878,105 @@ body.modal-open {
   letter-spacing: 0.08em;
   z-index: 1;
   text-align: center;
+}
+
+/* ── Album Slot Styles ── */
+.album-slot {
+  cursor: pointer;
+  align-items: stretch;
+  justify-content: stretch;
+  border-style: solid;
+  border-color: rgba(244, 182, 194, 0.16);
+  background: rgba(7, 11, 20, 0.65);
+}
+
+.album-stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.album-stack img {
+  position: absolute;
+  width: 90%;
+  height: 90%;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.album-stack .album-cover {
+  position: relative;
+  z-index: 3;
+}
+
+.album-stack .album-sheet {
+  position: absolute;
+  width: 90%;
+  height: 90%;
+  object-fit: cover;
+  border-radius: 3px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.sheet-2 {
+  transform: rotate(3deg) scale(0.98);
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sheet-3 {
+  transform: rotate(-3deg) scale(0.96);
+  z-index: 1;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.album-slot:hover .album-cover {
+  transform: scale(1.02) translate(-2px, -2px);
+}
+
+.album-slot:hover .sheet-2 {
+  transform: rotate(6deg) scale(0.99) translate(2px, 2px);
+}
+
+.album-slot:hover .sheet-3 {
+  transform: rotate(-6deg) scale(0.97) translate(-3px, 3px);
+}
+
+.album-meta {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(7, 11, 20, 0.95) 40%, rgba(7, 11, 20, 0));
+  padding: 24px 14px 12px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.album-badge {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.54rem;
+  font-weight: 700;
+  color: var(--pink);
+  letter-spacing: 0.1em;
+}
+
+.album-title {
+  font-family: "Space Grotesk", Inter, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--white);
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 @media (prefers-reduced-motion: reduce) {

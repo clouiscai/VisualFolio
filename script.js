@@ -384,7 +384,8 @@ function initPhotoRoll() {
         type: "image",
         src: img.src,
         alt: img.alt || "About photo",
-        description: img.alt || "Build and testing phase documentation photo."
+        description: img.alt || "Build and testing phase documentation photo.",
+        noSidebar: true
       });
     }
   });
@@ -424,7 +425,8 @@ function initPhotoRoll() {
         type: "image",
         src: profileImg.src,
         alt: profileImg.alt || "Carl Louis Profile",
-        description: "Carl Louis - BEng Aerospace Engineering graduate, Singapore Institute of Technology."
+        description: "Carl Louis - BEng Aerospace Engineering graduate, Singapore Institute of Technology.",
+        noSidebar: true
       });
     });
 
@@ -433,7 +435,8 @@ function initPhotoRoll() {
         type: "image",
         src: profileImg.src,
         alt: profileImg.alt || "Carl Louis Profile",
-        description: "Carl Louis - BEng Aerospace Engineering graduate, Singapore Institute of Technology."
+        description: "Carl Louis - BEng Aerospace Engineering graduate, Singapore Institute of Technology.",
+        noSidebar: true
       }
     }));
   }
@@ -534,7 +537,7 @@ const projectData = {
   "fwish-gev": {
     label: "WORK IN PROGRESS",
     type: "GEV-01 / Aerodynamics",
-    title: "FWISH Ground-Effect Craft",
+    title: "FWISH | Personal Wing-In-Ground Effect Craft",
     description:
       "A personal wing-in-ground-effect (WIG) craft research and prototyping platform designed to exploit aerodynamic lift enhancements when operating close to flat boundaries. The project involves CFD simulation of high-pressure ground cushioning, aerodynamic wing-profile design, and construction of scaled prototypes to evaluate pitch stability, height-sensing control loops, and thrust line optimizations.",
     pins: null,
@@ -543,43 +546,61 @@ const projectData = {
     ],
     media: [
       {
-        type: "image",
-        src: "./assets/about/FWISH_sim_wallshearstress.png",
-        alt: "CFD Wall Shear Stress Contour",
-        description: "ANSYS CFD simulation plotting wall shear stress distribution across the fuselage and lifting surfaces of the FWISH ground-effect craft, identifying boundary layer separation points."
-      },
-      {
-        type: "image",
-        src: "./assets/about/FWISH_Simulink.jpg",
-        alt: "Simulink Flight Dynamics Control Loop",
-        description: "Simulink system model incorporating 6-degrees-of-freedom aerodynamics and equations of motion to simulate and refine ground-effect altitude control and pitch damping."
-      },
-      {
-        type: "image",
-        src: "./assets/about/FWISH_V0_display_build.jpg",
-        alt: "Prototype Structural Assembly",
-        description: "The physical construction and structural assembly phase of the FWISH V0 display model, checking alignment of structural spars and control surface hinge lines."
+        type: "pdf",
+        src: "./assets/projects/fwish-personal-ground-effect-craft/Carl_Louis_Capstone_Report_LES_Based_Investigation_of_Unsteady_Wake.pdf",
+        label: "Capstone Report",
+        description: "Undergraduate capstone research investigating unsteady wake interactions between tandem wings in FWISH. The project used LES CFD simulations to analyse aerodynamic coupling, wake behaviour, and stability implications for FWISH personal ground-effect craft development."
       },
       {
         type: "video",
         src: "./assets/projects/fwish-personal-ground-effect-craft/8.12x_top te gurney in_developed.mp4",
-        alt: "Gurney Configuration LES Wake Development",
-        description: "LES-based wake investigation evidence for the developed top TE Gurney configuration."
+        alt: "Simulation Animation For Inward Gurney Modification",
+        description: "LES-based wake simulation showing transient flow structures and unsteady vortex patterns behind tandem wings in ground effect. Viewing from top plane cutting through wings leading edge horizontally"
+      },
+      {
+        type: "image",
+        src: "./assets/about/FWISH_V0_display_build.jpg",
+        alt: "Display Model Build",
+        description: "The physical construction and structural assembly phase of the FWISH V0 display model."
+      },
+      {
+        type: "image",
+        src: "./assets/projects/fwish-personal-ground-effect-craft/v0-display-wings.jpg",
+        alt: "Display Wings",
+        description: "Fabricated wings for the FWISH v0 display model craft."
       },
       {
         type: "video",
         src: "./assets/projects/fwish-personal-ground-effect-craft/manufacturing.mp4",
-        alt: "FWISH Manufacturing Evidence",
-        description: "Manufacturing and prototype build evidence for the FWISH ground-effect craft."
+        alt: "Manufacturing Evidence",
+        description: "Manufacturing of foam core for the FWISH v0 display model craft."
       },
       {
-        type: "pdf",
-        src: "./assets/projects/fwish-personal-ground-effect-craft/Carl_Louis_Capstone_Report_LES_Based_Investigation_of_Unsteady_Wake.pdf",
-        label: "Capstone Report",
-        description: "Undergraduate capstone research investigating unsteady wake interactions between tandem wings in FWISH. The project used high-fidelity LES CFD simulations to analyse aerodynamic coupling, wake behaviour, and stability implications for personal ground-effect craft development."
+        type: "album",
+        label: "Early Design Analysis",
+        images: [
+          {
+            type: "image",
+            src: "./assets/projects/fwish-personal-ground-effect-craft/v0-early-geom-design-analysis.jpg",
+            alt: "Early Geometric Design Analysis",
+            description: "Initial geometric configurations and lifting line optimization analysis for early design phases. Done in Microsoft Excel"
+          },
+          {
+            type: "image",
+            src: "./assets/projects/fwish-personal-ground-effect-craft/v0-early-forcecoef-analysis.jpg",
+            alt: "Early Static Flight Forces Analysis",
+            description: "Aerodynamic forces analysis evaluating lift and drag behavior. Done in Microsoft Excel"
+          },
+          {
+            type: "image",
+            src: "./assets/projects/fwish-personal-ground-effect-craft/v0-moment-analysis-plot.jpg",
+            alt: "Early Moment Analysis Plot",
+            description: "Static pitching moments plots for early design layouts. Done in MATLAB"
+          }
+        ]
       }
     ],
-    tags: ["CFD", "Aerodynamics", "Simulink", "WIG Craft", "Dynamics"],
+    tags: ["WIG Craft", "CFD", "Aerodynamics", "Simulink", "Dynamics", "MATLAB"],
   },
   "wing-opt": {
     label: "WORK IN PROGRESS",
@@ -592,7 +613,7 @@ const projectData = {
       { label: "STATUS", value: "Building" },
     ],
     media: [],
-    tags: ["MATLAB", "Evolutionary Models", "Aerodynamics", "Optimization"],
+    tags: ["Evolutionary Models", "Aerodynamics", "Optimization"],
   },
   "airframe-opt": {
     label: "STRUCTURE",
@@ -708,6 +729,8 @@ const mediaViewerClose = document.getElementById("media-viewer-close");
 const mediaViewerDisplay = document.getElementById("media-viewer-display");
 const mediaViewerTitle = document.getElementById("media-viewer-title");
 const mediaViewerDescription = document.getElementById("media-viewer-description");
+const mediaViewerPrev = document.getElementById("media-viewer-prev");
+const mediaViewerNext = document.getElementById("media-viewer-next");
 
 let mediaViewerItems = [];
 let mediaViewerIndex = 0;
@@ -1813,6 +1836,21 @@ function openModal(projectId) {
             <span class="pdf-card-author">Carl Louis</span>
           </div>
         </div>`;
+      } else if (item.type === "album") {
+        const img1 = item.images[0] ? `<img src="${item.images[0].src}" alt="${item.label}" class="album-cover" loading="lazy">` : '';
+        const img2 = item.images[1] ? `<img src="${item.images[1].src}" alt="" class="album-sheet sheet-2" aria-hidden="true" loading="lazy">` : '<div class="album-sheet sheet-2"></div>';
+        const img3 = item.images[2] ? `<img src="${item.images[2].src}" alt="" class="album-sheet sheet-3" aria-hidden="true" loading="lazy">` : '<div class="album-sheet sheet-3"></div>';
+        return `<div class="modal-media-slot has-media album-slot" data-index="${index}">
+          <div class="album-stack" aria-hidden="true">
+            ${img3}
+            ${img2}
+            ${img1}
+          </div>
+          <div class="album-meta">
+            <span class="album-badge">ALBUM &bull; ${item.images.length} ENTRIES</span>
+            <h4 class="album-title">${item.label}</h4>
+          </div>
+        </div>`;
       } else {
         return `<div class="modal-media-slot" data-index="${index}"><div class="media-slot-placeholder">${item.label}</div></div>`;
       }
@@ -2077,6 +2115,7 @@ function renderMediaViewerItem(item) {
   mediaViewerOverlay.classList.toggle("pdf-active", item.type === "pdf");
   mediaViewerOverlay.classList.toggle("has-sequence", mediaViewerItems.length > 1);
   mediaViewerOverlay.classList.toggle("image-mode", item.type === "image");
+  mediaViewerOverlay.classList.toggle("no-sidebar", Boolean(item.noSidebar));
 
   // Title selection
   let displayTitle = item.alt || item.label || "Asset view";
@@ -2146,7 +2185,12 @@ function renderMediaViewerItem(item) {
 function openMediaViewer(projectId, index) {
   const project = projectData[projectId];
   if (!project) return;
-  openMediaItems(project.media, index);
+  const item = project.media[index];
+  if (item && item.type === "album") {
+    openMediaItems(item.images, 0);
+  } else {
+    openMediaItems(project.media, index);
+  }
 }
 
 function showAdjacentMedia(direction) {
@@ -2166,6 +2210,7 @@ function closeMediaViewer() {
   mediaViewerOverlay.classList.remove("has-sequence");
   mediaViewerOverlay.classList.remove("peeking");
   mediaViewerOverlay.classList.remove("image-mode");
+  mediaViewerOverlay.classList.remove("no-sidebar");
   mediaViewerOverlay.setAttribute("aria-hidden", "true");
   mediaViewerDisplay.innerHTML = "";
   mediaViewerItems = [];
@@ -2176,6 +2221,14 @@ function closeMediaViewer() {
 mediaViewerClose.addEventListener("click", closeMediaViewer);
 mediaViewerOverlay.addEventListener("click", (e) => {
   if (e.target === mediaViewerOverlay) closeMediaViewer();
+});
+mediaViewerPrev?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  showAdjacentMedia(-1);
+});
+mediaViewerNext?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  showAdjacentMedia(1);
 });
 
 // Mobile touch swipe gestures for lightbox navigation
