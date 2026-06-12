@@ -612,8 +612,53 @@ const projectData = {
     telemetry: [
       { label: "STATUS", value: "Building" },
     ],
-    media: [],
+    media: [
+      {
+        type: "image",
+        src: "./assets/projects/genetic-aerodynamic-optimisation/genesis-batch-generated-models-population.jpg",
+        alt: "Genesis Batch Population Modelling in ForgeCAD",
+        description: "Initial seed population generation of parameterized wing structures modeled inside ForgeCAD, presenting randomized variations of chord lengths, sweeps, and spanwise curvatures."
+      },
+      {
+        type: "image",
+        src: "./assets/projects/genetic-aerodynamic-optimisation/genesis-batch-population.jpg",
+        alt: "10-Population Wing Variants Rendering",
+        description: "Visualisation of the 10-population wing designs generated concurrently inside the parametric CAD pipeline, demonstrating diverse geometric configurations before export to OpenFOAM for aerodynamic evaluation."
+      }
+    ],
     tags: ["Evolutionary Models", "Aerodynamics", "Optimization"],
+    flowchart: {
+      steps: [
+        {
+          active: false,
+          title: "Genesis Batch Generation",
+          description: "Define wing spline parameters, constraint bounds, and generate the baseline population using a randomized seed.",
+          tag: "ForgeCAD",
+          status: "COMPLETED"
+        },
+        {
+          active: true,
+          title: "Aerodynamic Simulation (CFD)",
+          description: "Execute automated mesh generation and parallelized RANS CFD simulations in ground effect in OpenFOAM.",
+          tag: "OpenFOAM",
+          subtext: "CURRENTLY BUILDING: Establishing consistent simulation boundaries and meshing parameters for the first batch CFD runs."
+        },
+        {
+          active: false,
+          title: "Survivor Selection & Breeding",
+          description: "Take the top 20% survivors and breed them with crossover/mutation operators to obtain the next generation.",
+          tag: "Genetic Core",
+          status: "UPCOMING"
+        },
+        {
+          active: false,
+          title: "Iterative Convergence Loop",
+          description: "Repeat the cycle recursively until aerodynamic efficiency converges to the optimal curved profile.",
+          tag: "Convergence",
+          status: "UPCOMING"
+        }
+      ]
+    }
   },
   "airframe-opt": {
     label: "STRUCTURE",
@@ -1779,11 +1824,13 @@ function openModal(projectId) {
   const visualFrame = document.getElementById("modal-visual-frame");
   const flightPanel = document.getElementById("flight-test-panel");
   const propulsionPanel = document.getElementById("propulsion-telemetry-panel");
+  const flowchartPanel = document.getElementById("flowchart-panel");
   visualFrame.classList.toggle("timeline-mode", Boolean(data.flightTimeline));
   visualFrame.classList.toggle("propulsion-mode", Boolean(data.propulsionDashboard));
+  visualFrame.classList.toggle("flowchart-mode", Boolean(data.flowchart));
   visualFrame.classList.toggle("uav-airframe-mode", projectId === "airframe-opt");
   visualFrame.classList.toggle("fwish-model-mode", projectId === "fwish-gev");
-  visualFrame.classList.toggle("wip-rings-mode", projectId === "wing-opt");
+  visualFrame.classList.toggle("wip-rings-mode", projectId === "wing-opt" && !data.flowchart);
 
   // Populate mission pins
   const pinTop = document.getElementById("modal-pin-top");
@@ -1929,6 +1976,46 @@ function openModal(projectId) {
     }
   }
 
+  if (flowchartPanel) {
+    if (data.flowchart) {
+      flowchartPanel.setAttribute("aria-hidden", "false");
+      flowchartPanel.innerHTML = `
+        <div class="flowchart-header">
+          <span>PROJECT WORKFLOW</span>
+          <h3>Genetic Aerodynamic Optimisation</h3>
+        </div>
+        <div class="flowchart-nodes">
+          ${data.flowchart.steps
+            .map((step, index) => {
+              const isActive = step.active ? "is-active" : "";
+              const statusLabel = step.active ? "CURRENT STAGE" : step.status || "UPCOMING";
+              return `
+                <div class="flowchart-node-card ${isActive}" style="--node-index: ${index}">
+                  <div class="node-indicator">
+                    <span class="node-dot"></span>
+                    ${step.active ? '<span class="node-pulse"></span>' : ""}
+                  </div>
+                  <div class="node-content">
+                    <div class="node-badge-row">
+                      <span class="node-status">${statusLabel}</span>
+                      ${step.tag ? `<span class="node-tag">${step.tag}</span>` : ""}
+                    </div>
+                    <h4>${step.title}</h4>
+                    <p>${step.description}</p>
+                    ${step.subtext ? `<div class="node-subtext">${step.subtext}</div>` : ""}
+                  </div>
+                </div>
+              `;
+            })
+            .join("")}
+        </div>
+      `;
+    } else {
+      flowchartPanel.setAttribute("aria-hidden", "true");
+      flowchartPanel.innerHTML = "";
+    }
+  }
+
   // Show modal
   document.body.classList.add("modal-open");
   overlay.classList.add("active");
@@ -1955,6 +2042,7 @@ function closeModal() {
     visualFrame.classList.remove("uav-airframe-mode");
     visualFrame.classList.remove("fwish-model-mode");
     visualFrame.classList.remove("wip-rings-mode");
+    visualFrame.classList.remove("flowchart-mode");
   }
   const flightPanel = document.getElementById("flight-test-panel");
   if (flightPanel) {
@@ -1965,6 +2053,11 @@ function closeModal() {
   if (propulsionPanel) {
     propulsionPanel.setAttribute("aria-hidden", "true");
     propulsionPanel.innerHTML = "";
+  }
+  const flowchartPanel = document.getElementById("flowchart-panel");
+  if (flowchartPanel) {
+    flowchartPanel.setAttribute("aria-hidden", "true");
+    flowchartPanel.innerHTML = "";
   }
   cleanupModalScene();
 }
