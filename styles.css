@@ -68,7 +68,51 @@ a {
   z-index: -1;
   width: 100%;
   height: 100%;
-  opacity: 0.8;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* Tooltip for project constellation nodes in the orbit layer. */
+.constellation-tip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 11px;
+  border: 1px solid rgba(244, 182, 194, 0.28);
+  border-radius: 4px;
+  background: rgba(7, 11, 20, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, calc(-100% - 14px)) translateY(4px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.constellation-tip.visible {
+  opacity: 1;
+  transform: translate(-50%, calc(-100% - 14px));
+}
+
+.constellation-tip .tip-name {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--rose);
+}
+
+.constellation-tip .tip-tag {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray);
 }
 
 .site-shell {
@@ -371,28 +415,28 @@ h3 {
 
 .about {
   min-height: calc(100vh - 82px);
-  padding-top: 34px;
-  padding-bottom: 66px;
+  padding-top: 24px;
+  padding-bottom: 36px;
 }
 
 .masthead-section {
   position: relative;
-  padding-top: 72px;
-  padding-bottom: 58px;
+  padding-top: 28px;
+  padding-bottom: 16px;
 }
 
 .portfolio-masthead {
   margin-bottom: 0;
   color: var(--white);
   font-family: "Space Grotesk", Inter, sans-serif;
-  font-size: 3.25rem;
+  font-size: clamp(2.2rem, 5vw, 3.25rem);
   font-weight: 700;
   line-height: 0.92;
   letter-spacing: 0;
 }
 
 .portfolio-masthead span {
-  display: block;
+  display: inline-block;
 }
 
 .masthead-section::after,
@@ -406,17 +450,17 @@ h3 {
 }
 
 .masthead-section::after {
-  margin-top: 58px;
+  margin-top: 20px;
 }
 
 .section+.section::before {
-  margin-bottom: 58px;
+  margin-bottom: 24px;
 }
 
 .about .section-kicker {
   grid-template-columns: 1fr;
-  margin-top: 58px;
-  margin-bottom: 34px;
+  margin-top: 24px;
+  margin-bottom: 18px;
 }
 
 .about .section-kicker h2 {
@@ -430,7 +474,7 @@ h3 {
 
 .section-heading {
   display: block;
-  margin-bottom: 28px;
+  margin-bottom: 16px;
 }
 
 .section-heading h2 {
@@ -456,7 +500,7 @@ h3 {
   align-content: start;
   gap: 12px;
   width: 100%;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 
 .social-rail a {
@@ -581,7 +625,7 @@ h3 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(270px, 25vw, 350px);
   gap: clamp(18px, 2.2vw, 34px);
-  min-height: clamp(350px, 42vh, 440px);
+  min-height: clamp(260px, 32vh, 320px);
   overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.08);
   border-radius: 4px;
@@ -760,9 +804,9 @@ h3 {
   position: relative;
   z-index: 1;
   width: 100%;
-  height: clamp(280px, 24vh, 360px);
+  height: clamp(180px, 18vh, 240px);
   overflow: hidden;
-  margin-top: 24px;
+  margin-top: 16px;
 }
 
 .photo-roll {
@@ -802,7 +846,7 @@ h3 {
 .roll-frame {
   position: relative;
   flex: 0 0 auto;
-  width: clamp(320px, 20vw, 430px);
+  height: 100%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
   border: 1px solid rgba(244, 182, 194, 0.72);
@@ -1513,7 +1557,7 @@ h3 {
   }
 
   .portfolio-masthead {
-    font-size: 4rem;
+    font-size: clamp(2rem, 6vw, 3.25rem);
   }
 
   .section-heading h2 {
@@ -1587,7 +1631,7 @@ h3 {
   }
 
   .profile-stack {
-    min-height: 224px;
+    min-height: 269px;
   }
 
   .photo-roll {
@@ -1608,7 +1652,7 @@ h3 {
 
   .roll-frame {
     flex: 0 0 auto;
-    width: 240px;
+    width: 288px;
     aspect-ratio: 4 / 3;
   }
 
@@ -1760,7 +1804,7 @@ h3 {
   }
 
   .profile-stack {
-    min-height: 184px;
+    min-height: 221px;
   }
 
   .photo-roll {
@@ -1774,7 +1818,7 @@ h3 {
   }
 
   .roll-frame {
-    width: 192px;
+    width: 230px;
     border-radius: 4px;
   }
 
@@ -1959,11 +2003,11 @@ h3 {
   }
 
   .roll-frame {
-    width: 195px;
+    width: 234px;
   }
 
   .profile-stack {
-    min-height: 190px;
+    min-height: 228px;
   }
 
   .note-card {
@@ -3793,10 +3837,10 @@ body.modal-open {
 
 .media-viewer-display img,
 .media-viewer-display video {
+  width: 100%;
+  height: 100%;
   max-width: 100%;
   max-height: 100%;
-  width: auto;
-  height: auto;
   object-fit: contain;
   border-radius: 2px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);

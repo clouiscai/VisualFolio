@@ -18,68 +18,516 @@ const revealObserver = new IntersectionObserver(
 
 document.querySelectorAll(".reveal").forEach((element) => revealObserver.observe(element));
 
+/**
+ * Cosmic descent background.
+ *
+ * A single WebGL scene rendered behind the page on the #spacefield canvas.
+ * Scroll drives a continuous camera journey through three staged scenes:
+ *   • top of page (depth 0)   — a dotted 3D Earth sitting on the RIGHT of frame
+ *   • mid scroll  (depth ~0.5) — the camera pulls back and reorients toward a
+ *                                field of distant star systems (Earth recedes)
+ *   • bottom      (depth 1)   — the camera flies INTO one chosen star system
+ *
+ * At every depth the cursor gently orbits the camera around whatever it is
+ * looking at, so each layer reads as an interactive frame you can "look around".
+ *
+ * Aesthetic stays on-brand with the rest of the site: muted navy/near-black,
+ * soft white, pink (#f4b6c2) and lavender (#d8b4f8); low opacity, slow motion,
+ * nothing neon. The renderer is alpha so the page background gradient shows
+ * through. Honours prefers-reduced-motion (static, redraws on scroll) and
+ * pauses while the tab is hidden.
+ */
 function createSpacefield() {
   const canvas = document.querySelector("#spacefield");
-  const context = canvas.getContext("2d");
-  const particles = [];
+  if (!canvas) return;
+
+  const coarse = window.matchMedia("(pointer: coarse)").matches;
+  const lowPower = coarse || window.innerWidth < 760;
+
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: !lowPower,
+      powerPreference: "high-performance",
+    });
+  } catch (e) {
+    return; // No WebGL — leave the CSS page gradient as the background.
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lowPower ? 1.5 : 2));
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 4000);
+
+  // Muted palette mirroring styles.css custom properties.
+  const COL = {
+    white: new THREE.Color("#eef2f8"),
+    pink: new THREE.Color("#f4b6c2"),
+    rose: new THREE.Color("#f8cad4"),
+    lavender: new THREE.Color("#d8b4f8"),
+    gray: new THREE.Color("#94a3b8"),
+  };
+
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const smooth = (t) => t * t * (3 - 2 * t);
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  // ── Soft radial-gradient sprite texture (shared by all glows) ────────────
+  function glowTexture() {
+    const s = 128;
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = s;
+    const g = cv.getContext("2d");
+    const grd = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+    grd.addColorStop(0, "rgba(255,255,255,1)");
+    grd.addColorStop(0.18, "rgba(255,255,255,0.85)");
+    grd.addColorStop(0.5, "rgba(255,255,255,0.25)");
+    grd.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = grd;
+    g.fillRect(0, 0, s, s);
+    const t = new THREE.CanvasTexture(cv);
+    t.needsUpdate = true;
+    return t;
+  }
+  const GLOW = glowTexture();
+
+  function makeGlow(color, size, opacity) {
+    const sp = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: GLOW,
+        color,
+        transparent: true,
+        opacity,
+        depthWrite: false,
+        blending: THREE.NormalBlending,
+      })
+    );
+    sp.scale.setScalar(size);
+    return sp;
+  }
+
+  // ── Far background starfield (always present, gives depth) ────────────────
+  function makeStarfield() {
+    const count = lowPower ? 1100 : 2400;
+    const pos = new Float32Array(count * 3);
+    const col = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const u = Math.random() * 2 - 1;
+      const th = Math.random() * Math.PI * 2;
+      const r = Math.sqrt(1 - u * u);
+      const rad = 900 + Math.random() * 1400;
+      pos[i * 3] = r * Math.cos(th) * rad;
+      pos[i * 3 + 1] = u * rad;
+      pos[i * 3 + 2] = r * Math.sin(th) * rad;
+      const tint = Math.random();
+      const c = COL.white.clone().lerp(tint < 0.5 ? COL.lavender : COL.rose, Math.random() * 0.45);
+      const b = 0.45 + Math.random() * 0.55;
+      col[i * 3] = c.r * b;
+      col[i * 3 + 1] = c.g * b;
+      col[i * 3 + 2] = c.b * b;
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    g.setAttribute("color", new THREE.BufferAttribute(col, 3));
+    const m = new THREE.PointsMaterial({
+      size: lowPower ? 2.0 : 2.4,
+      sizeAttenuation: false,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.62,
+      depthWrite: false,
+    });
+    return new THREE.Points(g, m);
+  }
+
+  // ── Dotted Earth ─────────────────────────────────────────────────────────
+  // Real continents and islands: dots are placed on a Fibonacci sphere, then
+  // each candidate is projected to lon/lat and kept only where an equirectangular
+  // land/water mask says "land". The globe body is just a soft low-alpha pink
+  // sphere; an invisible depth occluder behind it hides the back-hemisphere dots
+  // so the front continents stay clean.
+  const EARTH_R = 11;
+  const EARTH_MASK_URL = import.meta.env.BASE_URL + "assets/background/earth-water.png";
+  function makeEarth() {
+    const group = new THREE.Group();
+
+    // Invisible occluder: writes depth only, so back-side land dots are hidden.
+    const occluder = new THREE.Mesh(
+      new THREE.SphereGeometry(EARTH_R * 0.985, 48, 32),
+      new THREE.MeshBasicMaterial({ colorWrite: false })
+    );
+    group.add(occluder);
+
+    // Soft low-alpha pink globe body.
+    const body = new THREE.Mesh(
+      new THREE.SphereGeometry(EARTH_R * 0.99, 48, 32),
+      new THREE.MeshBasicMaterial({
+        color: COL.pink,
+        transparent: true,
+        opacity: 0.12,
+        depthWrite: false,
+      })
+    );
+    group.add(body);
+
+    // Atmosphere glow behind the globe.
+    const halo = makeGlow(COL.lavender.clone().lerp(COL.rose, 0.4), EARTH_R * 3.4, 0.22);
+    group.add(halo);
+
+    const earthObj = { group, dots: null, sats: [] };
+
+    // Sample the land mask and dot the continents (async — mask is a local PNG).
+    const img = new Image();
+    img.onload = () => {
+      const mw = img.naturalWidth;
+      const mh = img.naturalHeight;
+      const cv = document.createElement("canvas");
+      cv.width = mw;
+      cv.height = mh;
+      const mctx = cv.getContext("2d", { willReadFrequently: true });
+      mctx.drawImage(img, 0, 0);
+      const data = mctx.getImageData(0, 0, mw, mh).data;
+      const isLand = (lon, lat) => {
+        const u = (lon + Math.PI) / (2 * Math.PI);
+        const v = 0.5 - lat / Math.PI;
+        const px = clamp(Math.floor(u * mw), 0, mw - 1);
+        const py = clamp(Math.floor(v * mh), 0, mh - 1);
+        const i = (py * mw + px) * 4;
+        return (data[i] + data[i + 1] + data[i + 2]) / 3 < 110; // land = dark
+      };
+
+      const cand = lowPower ? 18000 : 52000;
+      const golden = Math.PI * (3 - Math.sqrt(5));
+      const pos = [];
+      const col = [];
+      for (let i = 0; i < cand; i++) {
+        const y = 1 - (i / (cand - 1)) * 2;
+        const rad = Math.sqrt(Math.max(0, 1 - y * y));
+        const th = golden * i;
+        const x = Math.cos(th) * rad;
+        const z = Math.sin(th) * rad;
+        const lat = Math.asin(clamp(y, -1, 1));
+        const lon = Math.atan2(z, x);
+        if (!isLand(lon, lat)) continue;
+        pos.push(x * EARTH_R, y * EARTH_R, z * EARTH_R);
+        // Soft white land with a faint warm tint; ice caps a touch brighter.
+        const ice = Math.abs(lat) > 1.2 ? 0.25 : 0;
+        const c = COL.white.clone().lerp(COL.pink, 0.14 + Math.random() * 0.16 - ice * 0.14);
+        const b = 0.62 + Math.random() * 0.3 + ice * 0.15;
+        col.push(c.r * b, c.g * b, c.b * b);
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(pos), 3));
+      g.setAttribute("color", new THREE.BufferAttribute(new Float32Array(col), 3));
+      const m = new THREE.PointsMaterial({
+        size: lowPower ? 0.2 : 0.16,
+        sizeAttenuation: true,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.96,
+        depthWrite: true,
+      });
+      earthObj.dots = new THREE.Points(g, m);
+      group.add(earthObj.dots);
+    };
+    img.src = EARTH_MASK_URL;
+
+    // A couple of inclined satellite orbits with travelling dots.
+    const sats = earthObj.sats;
+    const orbitDefs = [
+      { r: EARTH_R * 1.5, rx: 0.5, rz: 0.3, col: COL.gray, op: 0.16 },
+      { r: EARTH_R * 1.9, rx: -0.9, rz: 0.6, col: COL.pink, op: 0.13 },
+    ];
+    for (const od of orbitDefs) {
+      const pivot = new THREE.Group();
+      pivot.rotation.set(od.rx, 0, od.rz);
+      const curve = new THREE.EllipseCurve(0, 0, od.r, od.r, 0, Math.PI * 2);
+      const pts = curve.getPoints(120).map((p) => new THREE.Vector3(p.x, 0, p.y));
+      const line = new THREE.LineLoop(
+        new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineBasicMaterial({ color: od.col, transparent: true, opacity: od.op, depthWrite: false })
+      );
+      pivot.add(line);
+      const sat = makeGlow(COL.rose, 1.1, 0.95);
+      pivot.add(sat);
+      group.add(pivot);
+      sats.push({ sat, r: od.r, speed: 0.25 + Math.random() * 0.2, phase: Math.random() * 6.28 });
+    }
+
+    return earthObj;
+  }
+
+  // ── A star system: glowing star + inclined orbit rings + revolving planet dots ─
+  // Everything is dots/glow sprites: a soft star glow with a crisp core, and
+  // small planet dots travelling along faint elliptical orbit rings.
+  function makeSystem(center, opt) {
+    const group = new THREE.Group();
+    group.position.copy(center);
+
+    const corona = makeGlow(opt.starColor.clone().lerp(COL.white, 0.55), opt.starSize * 1.5, 0.14);
+    group.add(corona);
+    const star = makeGlow(opt.starColor, opt.starSize, 0.85);
+    group.add(star);
+    // Crisp hot core so the star reads as a point of light, not a soft blob.
+    const core = makeGlow(COL.white.clone().lerp(opt.starColor, 0.3), opt.starSize * 0.42, 1.0);
+    group.add(core);
+
+    const planets = [];
+    for (let k = 0; k < opt.rings; k++) {
+      const rad = opt.r0 + k * opt.dr;
+      const ecc = 0.9 + Math.random() * 0.08;
+      const pivot = new THREE.Group();
+      pivot.rotation.set(opt.incline + k * 0.12, Math.random() * 6.28, opt.tilt);
+      const curve = new THREE.EllipseCurve(0, 0, rad, rad * ecc, 0, Math.PI * 2);
+      const pts = curve.getPoints(96).map((p) => new THREE.Vector3(p.x, 0, p.y));
+      const line = new THREE.LineLoop(
+        new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineBasicMaterial({
+          color: opt.ringColor || COL.gray,
+          transparent: true,
+          opacity: opt.ringOpacity || 0.16,
+          depthWrite: false,
+        })
+      );
+      pivot.add(line);
+      const pColor = k % 2 ? COL.lavender : COL.rose;
+      const planet = makeGlow(pColor, opt.planetSize * (0.8 + Math.random() * 0.5), 0.95);
+      pivot.add(planet);
+      group.add(pivot);
+      planets.push({
+        planet,
+        rad,
+        ecc,
+        speed: (opt.baseSpeed * 6) / (rad + 4),
+        phase: Math.random() * 6.28,
+      });
+    }
+    return { group, star, corona, planets };
+  }
+
+  // ── Build the world ──────────────────────────────────────────────────────
+  // Everything is dots/glow sprites/lines — no lit materials, so no lights.
+  const starfield = makeStarfield();
+  scene.add(starfield);
+
+  const earth = makeEarth();
+  scene.add(earth.group);
+
+  // Star systems scattered in a loose cluster ahead of and below Earth. The
+  // first one is the hero — the camera flies into it at full scroll depth.
+  const heroPos = new THREE.Vector3(0, -30, -150);
+  const systemDefs = [
+    { center: heroPos, starColor: COL.rose, starSize: 6, rings: 4, r0: 11, dr: 7, incline: 0.42, tilt: 0.18, planetSize: 2.6, baseSpeed: 0.5, ringColor: COL.pink, ringOpacity: 0.32 },
+    { center: new THREE.Vector3(-54, -14, -108), starColor: COL.lavender, starSize: 5, rings: 3, r0: 7, dr: 5, incline: -0.7, tilt: 0.5, planetSize: 1.4, baseSpeed: 0.6 },
+    { center: new THREE.Vector3(44, -40, -168), starColor: COL.pink, starSize: 6, rings: 3, r0: 8, dr: 6, incline: 0.9, tilt: -0.4, planetSize: 1.6, baseSpeed: 0.45 },
+    { center: new THREE.Vector3(-26, -54, -186), starColor: COL.white, starSize: 4, rings: 2, r0: 6, dr: 5, incline: 0.3, tilt: 0.8, planetSize: 1.2, baseSpeed: 0.7 },
+    { center: new THREE.Vector3(30, -12, -210), starColor: COL.rose, starSize: 5, rings: 2, r0: 7, dr: 6, incline: -0.5, tilt: -0.6, planetSize: 1.3, baseSpeed: 0.55 },
+    { center: new THREE.Vector3(-60, -34, -150), starColor: COL.lavender, starSize: 4, rings: 2, r0: 6, dr: 5, incline: 0.6, tilt: 0.3, planetSize: 1.1, baseSpeed: 0.6 },
+  ];
+  const systems = systemDefs.map((d) => {
+    const s = makeSystem(d.center, d);
+    scene.add(s.group);
+    return s;
+  });
+
+  // Faint nebula haze for colour depth in the systems region.
+  for (const nb of [
+    { p: new THREE.Vector3(0, -30, -150), c: COL.lavender, s: 230, o: 0.05 },
+    { p: new THREE.Vector3(30, -20, -110), c: COL.pink, s: 180, o: 0.05 },
+  ]) {
+    scene.add(makeGlow(nb.c, nb.s, nb.o).translateX(nb.p.x).translateY(nb.p.y).translateZ(nb.p.z));
+  }
+
+  // ── Scroll-driven camera journey (keyframes) ─────────────────────────────
+  // Recomputed on resize so the framing adapts to portrait/landscape.
+  let journey = [];
+  function buildJourney(aspect) {
+    // On portrait screens pull the off-centre framing in so Earth stays visible.
+    const k = clamp(aspect, 0.55, 1.8);
+    const wide = (aspect - 1) * 0; // reserved for future tuning
+    // Monotonic forward arc: start with Earth on the right, rise up and over it
+    // while pitching down to reveal the star field below, then descend into the
+    // hero system. No backward motion, so Earth recedes once and never re-grows.
+    journey = [
+      { p: 0.0, pos: new THREE.Vector3(2, 4, 48), tgt: new THREE.Vector3(-19 * k, 2, 2), fov: 46 },
+      { p: 0.34, pos: new THREE.Vector3(3, 24, 22), tgt: new THREE.Vector3(0, -6, -30), fov: 52 },
+      { p: 0.66, pos: new THREE.Vector3(2, 4, -32), tgt: new THREE.Vector3(0, -26, -104), fov: 55 },
+      {
+        p: 1.0,
+        pos: new THREE.Vector3(heroPos.x - 2, heroPos.y + 11, heroPos.z + 31),
+        tgt: heroPos.clone(),
+        fov: 52,
+      },
+    ];
+    void wide;
+  }
+
+  const basePos = new THREE.Vector3();
+  const baseTgt = new THREE.Vector3();
+  let baseFov = 46;
+  function sampleJourney(p) {
+    p = clamp(p, 0, 1);
+    let a = journey[0];
+    let b = journey[journey.length - 1];
+    for (let i = 0; i < journey.length - 1; i++) {
+      if (p >= journey[i].p && p <= journey[i + 1].p) {
+        a = journey[i];
+        b = journey[i + 1];
+        break;
+      }
+    }
+    const span = Math.max(1e-5, b.p - a.p);
+    const t = smooth(clamp((p - a.p) / span, 0, 1));
+    basePos.lerpVectors(a.pos, b.pos, t);
+    baseTgt.lerpVectors(a.tgt, b.tgt, t);
+    baseFov = lerp(a.fov, b.fov, t);
+  }
+
+  // ── State ────────────────────────────────────────────────────────────────
   let width = 0;
   let height = 0;
-  let pixelRatio = 1;
+  let running = true;
+  let lastTime = 0;
+  let elapsed = 0;
+
+  let depthTarget = 0;
+  let depthS = 0;
+
+  // Smoothed pointer, used to orbit the camera at every depth.
+  const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
+
+  const _off = new THREE.Vector3();
+  const _sph = new THREE.Spherical();
+  const _tgt = new THREE.Vector3();
+
+  // Verification hook: visiting with ?depth=0.5 (0..1) freezes the camera
+  // journey at that point, so each stage can be screenshot without scrolling.
+  const _params = new URLSearchParams(location.search);
+  const _forceRaw = _params.get("depth");
+  const forceDepth = _forceRaw != null ? clamp(parseFloat(_forceRaw) || 0, 0, 1) : null;
+
+  function measureDepth() {
+    if (forceDepth != null) {
+      depthTarget = forceDepth;
+      return;
+    }
+    const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    depthTarget = clamp(window.scrollY / max, 0, 1);
+  }
 
   function resize() {
-    pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
     width = window.innerWidth;
     height = window.innerHeight;
-    canvas.width = Math.floor(width * pixelRatio);
-    canvas.height = Math.floor(height * pixelRatio);
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
-    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-
-    particles.length = 0;
-    const count = Math.floor(Math.min(160, Math.max(70, width / 10)));
-    for (let index = 0; index < count; index += 1) {
-      particles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        radius: Math.random() * 1.3 + 0.25,
-        speed: Math.random() * 0.12 + 0.03,
-        alpha: Math.random() * 0.46 + 0.12,
-      });
+    renderer.setSize(width, height, false);
+    camera.aspect = width / height;
+    buildJourney(camera.aspect);
+    camera.updateProjectionMatrix();
+    measureDepth();
+    if (prefersReducedMotion) {
+      depthS = depthTarget;
+      renderFrame(0);
     }
   }
 
-  function draw() {
-    context.clearRect(0, 0, width, height);
-    context.save();
-    context.strokeStyle = "rgba(244, 182, 194, 0.08)";
-    context.lineWidth = 1;
-    context.beginPath();
-    context.ellipse(width * 0.52, height * 0.82, width * 0.56, height * 0.23, -0.12, 0, Math.PI * 2);
-    context.stroke();
-    context.beginPath();
-    context.ellipse(width * 0.58, height * 0.64, width * 0.48, height * 0.18, 0.22, 0, Math.PI * 2);
-    context.stroke();
-    context.restore();
+  // ── Per-frame composition ────────────────────────────────────────────────
+  function renderFrame(dt) {
+    sampleJourney(depthS);
 
-    particles.forEach((particle) => {
-      particle.x += particle.speed;
-      particle.y += particle.speed * 0.18;
-      if (particle.x > width + 8) particle.x = -8;
-      if (particle.y > height + 8) particle.y = -8;
+    // Idle sway so the frame breathes even without input.
+    const swayX = Math.sin(elapsed * 0.00007) * 0.22;
+    const swayY = Math.cos(elapsed * 0.00009) * 0.14;
+    const yaw = (ptr.x + swayX) * 0.17;
+    const pitch = (ptr.y + swayY) * 0.11;
 
-      context.beginPath();
-      context.fillStyle = `rgba(249, 250, 251, ${particle.alpha})`;
-      context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
-      context.fill();
-    });
+    // Orbit the base camera position around the look target by the pointer.
+    _off.copy(basePos).sub(baseTgt);
+    _sph.setFromVector3(_off);
+    _sph.theta += yaw;
+    _sph.phi = clamp(_sph.phi - pitch, 0.18, Math.PI - 0.18);
+    _off.setFromSpherical(_sph);
 
-    if (!prefersReducedMotion) requestAnimationFrame(draw);
+    camera.position.copy(baseTgt).add(_off);
+    // Drift the look target slightly with the pointer for extra parallax life.
+    _tgt.copy(baseTgt);
+    _tgt.x += (ptr.x + swayX) * 2.4;
+    _tgt.y += (ptr.y + swayY) * 1.6;
+    camera.lookAt(_tgt);
+    camera.fov = baseFov;
+    camera.updateProjectionMatrix();
+
+    // Animate world elements.
+    earth.group.rotation.y = elapsed * 0.00004;
+    for (const s of earth.sats) {
+      const a = s.phase + elapsed * 0.001 * s.speed;
+      s.sat.position.set(Math.cos(a) * s.r, 0, Math.sin(a) * s.r);
+      s.sat.parent.position.set(0, 0, 0);
+    }
+    for (const sys of systems) {
+      for (const pl of sys.planets) {
+        const a = pl.phase + elapsed * 0.0006 * pl.speed;
+        pl.planet.position.set(Math.cos(a) * pl.rad, 0, Math.sin(a) * pl.rad * pl.ecc);
+      }
+    }
+    starfield.rotation.y = elapsed * 0.000008;
+
+    renderer.render(scene, camera);
   }
 
+  function animate(now) {
+    if (!running) return;
+    if (!lastTime) lastTime = now;
+    const dt = Math.min(0.05, (now - lastTime) / 1000);
+    lastTime = now;
+    elapsed += dt * 1000;
+
+    if (forceDepth != null) depthS = forceDepth;
+    else depthS += (depthTarget - depthS) * Math.min(1, dt * 4.5);
+    ptr.x += (ptr.tx - ptr.x) * Math.min(1, dt * 3.5);
+    ptr.y += (ptr.ty - ptr.y) * Math.min(1, dt * 3.5);
+
+    renderFrame(dt);
+    requestAnimationFrame(animate);
+  }
+
+  // ── Wire up ──────────────────────────────────────────────────────────────
   resize();
-  draw();
   window.addEventListener("resize", resize);
+
+  if (prefersReducedMotion) {
+    window.addEventListener(
+      "scroll",
+      () => {
+        measureDepth();
+        depthS = depthTarget;
+        renderFrame(0);
+      },
+      { passive: true }
+    );
+    return;
+  }
+
+  window.addEventListener(
+    "pointermove",
+    (e) => {
+      ptr.tx = (e.clientX / window.innerWidth - 0.5) * 2;
+      ptr.ty = (e.clientY / window.innerHeight - 0.5) * 2;
+    },
+    { passive: true }
+  );
+  window.addEventListener("scroll", measureDepth, { passive: true });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      running = false;
+    } else {
+      running = true;
+      lastTime = 0;
+      requestAnimationFrame(animate);
+    }
+  });
+
+  requestAnimationFrame(animate);
 }
 
 function createSpacecraftScene() {
@@ -615,15 +1063,27 @@ const projectData = {
     media: [
       {
         type: "image",
-        src: "./assets/projects/genetic-aerodynamic-optimisation/genesis-batch-generated-models-population.jpg",
-        alt: "Genesis Batch Population Modelling in ForgeCAD",
-        description: "Initial seed population generation of parameterized wing structures modeled inside ForgeCAD, presenting randomized variations of chord lengths, sweeps, and spanwise curvatures."
+        src: "./assets/projects/genetic-aerodynamic-optimisation/p_contour_h.gif",
+        alt: "Pressure Contours at 5 Different Heights",
+        description: "CFD simulation showing pressure contours across 5 different heights in ground effect, demonstrating aerodynamic lift enhancement."
+      },
+      {
+        type: "image",
+        src: "./assets/projects/genetic-aerodynamic-optimisation/design_000_ground_m0p20_sim.jpg",
+        alt: "Baseline Design CFD Simulation",
+        description: "CFD pressure contour simulation for the baseline wing geometry (design_000) at ground height at Mach 0.20."
       },
       {
         type: "image",
         src: "./assets/projects/genetic-aerodynamic-optimisation/genesis-batch-population.jpg",
         alt: "10-Population Wing Variants Rendering",
         description: "Visualisation of the 10-population wing designs generated concurrently inside the parametric CAD pipeline, demonstrating diverse geometric configurations before export to OpenFOAM for aerodynamic evaluation."
+      },
+      {
+        type: "image",
+        src: "./assets/projects/genetic-aerodynamic-optimisation/genesis-batch-generated-models-population.jpg",
+        alt: "Genesis Batch Population Modelling in ForgeCAD",
+        description: "Initial seed population generation of parameterized wing structures modeled inside ForgeCAD, presenting randomized variations of chord lengths, sweeps, and spanwise curvatures."
       }
     ],
     tags: ["Evolutionary Models", "Aerodynamics", "Optimization"],
@@ -637,24 +1097,31 @@ const projectData = {
           status: "COMPLETED"
         },
         {
-          active: true,
+          active: false,
           title: "Aerodynamic Simulation (CFD)",
           description: "Execute automated mesh generation and parallelized RANS CFD simulations in ground effect in OpenFOAM.",
           tag: "OpenFOAM",
-          subtext: "CURRENTLY BUILDING: Establishing consistent simulation boundaries and meshing parameters for the first batch CFD runs."
+          status: "COMPLETED"
         },
         {
           active: false,
           title: "Survivor Selection & Breeding",
-          description: "Take the top 20% survivors and breed them with crossover/mutation operators to obtain the next generation.",
+          description: "Establish and validate the survival selection, crossover breeding, and mutation algorithms for genetic iteration.",
           tag: "Genetic Core",
-          status: "UPCOMING"
+          status: "COMPLETED"
+        },
+        {
+          active: true,
+          title: "Recursive Evolutionary Process",
+          description: "Run the iterative evolutionary loop recursively, evaluating successive generations to optimize the lift-to-drag ratio.",
+          tag: "Evolution Loop",
+          subtext: "CURRENTLY RUNNING: Breeding and simulating generation populations. Observing convergence toward optimal curved profiles."
         },
         {
           active: false,
-          title: "Iterative Convergence Loop",
-          description: "Repeat the cycle recursively until aerodynamic efficiency converges to the optimal curved profile.",
-          tag: "Convergence",
+          title: "Analysis & Verification",
+          description: "Extract the final optimized wing profile and perform validation runs to verify aerodynamic performance gains.",
+          tag: "Validation",
           status: "UPCOMING"
         }
       ]
