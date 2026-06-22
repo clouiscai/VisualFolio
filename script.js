@@ -18,27 +18,8 @@ const revealObserver = new IntersectionObserver(
 
 document.querySelectorAll(".reveal").forEach((element) => revealObserver.observe(element));
 
-/**
- * Cosmic descent background.
- *
- * A single WebGL scene rendered behind the page on the #spacefield canvas.
- * Scroll drives a continuous camera journey through three staged scenes:
- *   • top of page (depth 0)   — a dotted 3D Earth sitting on the RIGHT of frame
- *   • mid scroll  (depth ~0.5) — the camera pulls back and reorients toward a
- *                                field of distant star systems (Earth recedes)
- *   • bottom      (depth 1)   — the camera flies INTO one chosen star system
- *
- * At every depth the cursor gently orbits the camera around whatever it is
- * looking at, so each layer reads as an interactive frame you can "look around".
- *
- * Aesthetic stays on-brand with the rest of the site: muted navy/near-black,
- * soft white, pink (#f4b6c2) and lavender (#d8b4f8); low opacity, slow motion,
- * nothing neon. The renderer is alpha so the page background gradient shows
- * through. Honours prefers-reduced-motion (static, redraws on scroll) and
- * pauses while the tab is hidden.
- */
 function createSpacefield() {
-  const canvas = document.querySelector("#spacefield");
+  const canvas = document.getElementById("spacefield");
   if (!canvas) return;
 
   const coarse = window.matchMedia("(pointer: coarse)").matches;
@@ -1055,38 +1036,130 @@ const projectData = {
     type: "OPT-01 / Computational Design",
     title: "Genetic Aerodynamic Design Optimisation",
     description:
-      "Developing a parametric aerodynamic optimisation engine that generates wing populations, evaluates each design through CFD analysis, and applies genetic evolution strategies to converge toward higher-performing aerodynamic geometries.",
+      "A parametric aerodynamic optimisation engine that generates wing populations, evaluates each design through CFD analysis, and applies genetic evolution strategies to converge toward higher-performing aerodynamic geometries.",
     pins: null,
     telemetry: [
-      { label: "STATUS", value: "Building" },
+      { label: "GENERATIONS SIMULATED", value: "10" },
+      { label: "POPULATION", value: "110" },
+      { label: "SIMULATION CASES RAN", value: "550" }
     ],
     media: [
       {
-        type: "image",
-        src: "./assets/projects/genetic-aerodynamic-optimisation/p_contour_h.gif",
-        alt: "Pressure Contours at 5 Different Heights",
-        description: "CFD simulation showing pressure contours across 5 different heights in ground effect, demonstrating aerodynamic lift enhancement."
+        type: "album",
+        label: "Evolution Generations Run",
+        images: [
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/all_generations_contact_sheet.png",
+            alt: "All Generations Evolution Run",
+            description: "Consolidated contact sheet showing the geometry evolution of the wing population across all 10 generations."
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/genesis-batch_contact_sheet.png",
+            alt: "Genesis Batch Population",
+            description: "Genesis batch population members contact sheet showing initial unoptimized airfoil shapes."
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/generation_01_contact_sheet.png",
+            alt: "Generation 1 Population",
+            description: "Generation 1 population members contact sheet showing initial seed variations and geometric shapes."
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/generation_02_contact_sheet.png",
+            alt: "Generation 2 Population",
+            description: "Generation 2 population members contact sheet showcasing early crossover and selections."
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/generation_03_contact_sheet.png",
+            alt: "Generation 3 Population",
+            description: "Generation 3 population members contact sheet with early structural refinements."
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/generation_04_contact_sheet.png",
+            alt: "Generation 4 Population",
+            description: "Generation 4 population members contact sheet showing mutation variations."
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/generation_05_contact_sheet.png",
+            alt: "Generation 5 Population",
+            description: "Generation 5 population members contact sheet presenting midpoint optimization shapes."
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/generation_06_contact_sheet.png",
+            alt: "Generation 6 Population",
+            description: "Generation 6 population members contact sheet showcasing progressive aerodynamic convergence."
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/generation_07_contact_sheet.png",
+            alt: "Generation 7 Population",
+            description: "Generation 7 population members contact sheet showing refined wing profiles."
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/generation_08_contact_sheet.png",
+            alt: "Generation 8 Population",
+            description: "Generation 8 population members contact sheet presenting highly optimized geometries."
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/generation_09_contact_sheet.png",
+            alt: "Generation 9 Population",
+            description: "Generation 9 population members contact sheet showing advanced structural convergence."
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/generation_10_contact_sheet.png",
+            alt: "Generation 10 Population (Final)",
+            description: "Generation 10 population members contact sheet showing final optimized wing profiles."
+          }
+        ]
       },
       {
-        type: "image",
-        src: "./assets/projects/genetic-aerodynamic-optimisation/design_000_ground_m0p20_sim.jpg",
-        alt: "Baseline Design CFD Simulation",
-        description: "CFD pressure contour simulation for the baseline wing geometry (design_000) at ground height at Mach 0.20."
+        type: "album",
+        label: "Aerodynamic Simulation Results",
+        images: [
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/p_contour_h.gif",
+            alt: "Pressure Contours at 5 Different Heights",
+            description: "CFD simulation of Gen 1, sample 1, showing pressure contours across 5 different heights in ground effect"
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/design_000_ground_m0p20_sim.jpg",
+            alt: "Baseline Design CFD Simulation",
+            description: "CFD simulation for the wing geometry of Gen 1, sample 1, at ground height of 0.20 meter."
+          }
+        ]
       },
       {
-        type: "image",
-        src: "./assets/projects/genetic-aerodynamic-optimisation/genesis-batch-population.jpg",
-        alt: "10-Population Wing Variants Rendering",
-        description: "Visualisation of the 10-population wing designs generated concurrently inside the parametric CAD pipeline, demonstrating diverse geometric configurations before export to OpenFOAM for aerodynamic evaluation."
-      },
-      {
-        type: "image",
-        src: "./assets/projects/genetic-aerodynamic-optimisation/genesis-batch-generated-models-population.jpg",
-        alt: "Genesis Batch Population Modelling in ForgeCAD",
-        description: "Initial seed population generation of parameterized wing structures modeled inside ForgeCAD, presenting randomized variations of chord lengths, sweeps, and spanwise curvatures."
+        type: "album",
+        label: "Genesis Batch Generation",
+        images: [
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/genesis-batch-population.jpg",
+            alt: "10-Population Wing Variants Rendering",
+            description: "Visualisation of the 10-population genesis batch wing designs generated concurrently inside the parametric CAD pipeline, demonstrating diverse geometric configurations before export to OpenFOAM for aerodynamic evaluation."
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/genesis-batch-generated-models-population.jpg",
+            alt: "Genesis Batch Population Modelling in ForgeCAD",
+            description: "Initial seed population generation of parameterized wing structures modeled inside ForgeCAD, presenting randomized variations of chord lengths, sweeps, and spanwise curvatures."
+          }
+        ]
       }
     ],
-    tags: ["Evolutionary Models", "Aerodynamics", "Optimization"],
+    tags: ["Evolutionary Model", "OpenFOAM", "ForgeCAD"],
     flowchart: {
       steps: [
         {
@@ -2318,9 +2391,21 @@ function openModal(projectId) {
   document.getElementById("modal-title").textContent = data.title;
   document.getElementById("modal-description").textContent = data.description;
 
+  // Populate telemetry header
+  const telemetryHeader = document.getElementById("modal-telemetry-header");
+  if (telemetryHeader) {
+    if (data.telemetryHeader) {
+      telemetryHeader.textContent = data.telemetryHeader;
+      telemetryHeader.style.display = "";
+    } else {
+      telemetryHeader.style.display = "none";
+    }
+  }
+
   // Populate telemetry strip
   const telemetry = document.getElementById("modal-telemetry");
   telemetry.classList.toggle("single-item", data.telemetry.length === 1);
+  telemetry.classList.toggle("three-items", data.telemetry.length === 3);
   telemetry.innerHTML = data.telemetry
     .map(
       (item) =>
@@ -2446,37 +2531,191 @@ function openModal(projectId) {
   if (flowchartPanel) {
     if (data.flowchart) {
       flowchartPanel.setAttribute("aria-hidden", "false");
-      flowchartPanel.innerHTML = `
-        <div class="flowchart-header">
-          <span>PROJECT WORKFLOW</span>
-          <h3>Genetic Aerodynamic Optimisation</h3>
-        </div>
-        <div class="flowchart-nodes">
-          ${data.flowchart.steps
-            .map((step, index) => {
-              const isActive = step.active ? "is-active" : "";
-              const statusLabel = step.active ? "CURRENT STAGE" : step.status || "UPCOMING";
-              return `
-                <div class="flowchart-node-card ${isActive}" style="--node-index: ${index}">
-                  <div class="node-indicator">
-                    <span class="node-dot"></span>
-                    ${step.active ? '<span class="node-pulse"></span>' : ""}
-                  </div>
-                  <div class="node-content">
-                    <div class="node-badge-row">
-                      <span class="node-status">${statusLabel}</span>
-                      ${step.tag ? `<span class="node-tag">${step.tag}</span>` : ""}
+      if (projectId === "wing-opt") {
+        flowchartPanel.innerHTML = `
+          <p class="modal-section-heading">PROJECT WORKFLOW</p>
+          <div class="aerospace-flowchart-container">
+            <svg width="100%" viewBox="0 0 540 1150" xmlns="http://www.w3.org/2000/svg" style="background: transparent; font-family: 'JetBrains Mono', monospace;">
+              <defs>
+                <!-- Glow filter -->
+                <filter id="glow-pink" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+                <!-- Arrow heads -->
+                <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="rgba(148, 163, 184, 0.4)" />
+                </marker>
+                <marker id="arrow-pink" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#F3B6D0" />
+                </marker>
+              </defs>
+
+              <!-- Standard top down connectors -->
+              <line x1="270" y1="85" x2="270" y2="120" stroke="rgba(148, 163, 184, 0.3)" stroke-width="1.5" marker-end="url(#arrow)" />
+              <line x1="270" y1="185" x2="270" y2="220" stroke="rgba(148, 163, 184, 0.3)" stroke-width="1.5" marker-end="url(#arrow)" />
+              <line x1="270" y1="285" x2="270" y2="320" stroke="rgba(148, 163, 184, 0.3)" stroke-width="1.5" marker-end="url(#arrow)" />
+
+              <!-- Connectors inside recursive loop -->
+              <line x1="270" y1="400" x2="270" y2="450" stroke="#F3B6D0" stroke-width="1.5" marker-end="url(#arrow-pink)" />
+              <line x1="270" y1="515" x2="270" y2="550" stroke="#F3B6D0" stroke-width="1.5" marker-end="url(#arrow-pink)" />
+              <line x1="270" y1="615" x2="270" y2="650" stroke="#F3B6D0" stroke-width="1.5" marker-end="url(#arrow-pink)" />
+              <line x1="270" y1="715" x2="270" y2="750" stroke="#F3B6D0" stroke-width="1.5" marker-end="url(#arrow-pink)" />
+              <line x1="270" y1="840" x2="270" y2="870" stroke="#F3B6D0" stroke-width="1.5" marker-end="url(#arrow-pink)" />
+              <line x1="270" y1="935" x2="270" y2="965" stroke="#F3B6D0" stroke-width="1.5" marker-end="url(#arrow-pink)" />
+
+              <!-- Left side Loop Back connection path (scaled outward to X=30) -->
+              <path d="M 170 1005 L 30 1005 L 30 367 L 70 367" fill="none" stroke="#F3B6D0" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-pink)" filter="url(#glow-pink)" />
+              <text x="40" y="995" fill="#F3B6D0" font-size="9px" font-weight="700">NO [GEN &lt; 10]</text>
+              <text x="40" y="358" fill="#F3B6D0" font-size="8px" letter-spacing="0.05em">LOOP: GEN ++</text>
+
+              <!-- YES path to output -->
+              <line x1="270" y1="1045" x2="270" y2="1075" stroke="rgba(148, 163, 184, 0.4)" stroke-width="1.5" marker-end="url(#arrow)" />
+              <text x="280" y="1063" fill="rgba(148, 163, 184, 0.6)" font-size="9px" font-weight="700">YES [GEN == 10]</text>
+
+              <!-- Node 1: Initial Population -->
+              <g transform="translate(70, 20)">
+                <rect width="400" height="65" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(148, 163, 184, 0.2)" stroke-width="1" />
+                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="rgba(148, 163, 184, 0.4)" />
+                <text x="200" y="25" fill="rgba(148, 163, 184, 0.4)" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">SEEDING</text>
+                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">INITIAL POPULATION</text>
+                <text x="200" y="53" fill="rgba(148, 163, 184, 0.7)" font-size="9px" text-anchor="middle">Generate 10 random wing geometries</text>
+              </g>
+
+              <!-- Node 2: Geometry Generation -->
+              <g transform="translate(70, 120)">
+                <rect width="400" height="65" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(148, 163, 184, 0.2)" stroke-width="1" />
+                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="rgba(148, 163, 184, 0.4)" />
+                <text x="200" y="25" fill="rgba(148, 163, 184, 0.4)" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">CAD SYNTHESIS</text>
+                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">GEOMETRY GENERATION</text>
+                <text x="200" y="53" fill="rgba(148, 163, 184, 0.7)" font-size="8.5px" text-anchor="middle">Convert genome parameters into 3D wing/winglet</text>
+              </g>
+
+              <!-- Node 3: Mesh Generation -->
+              <g transform="translate(70, 220)">
+                <rect width="400" height="65" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(148, 163, 184, 0.2)" stroke-width="1" />
+                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="rgba(148, 163, 184, 0.4)" />
+                <text x="200" y="25" fill="rgba(148, 163, 184, 0.4)" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">DISCRETIZATION</text>
+                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">MESH GENERATION</text>
+                <text x="200" y="53" fill="rgba(148, 163, 184, 0.7)" font-size="9px" text-anchor="middle">Generate CFD mesh automatically</text>
+              </g>
+
+              <!-- Node 4: CFD Evaluation -->
+              <g transform="translate(70, 320)">
+                <rect width="400" height="80" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(148, 163, 184, 0.2)" stroke-width="1" />
+                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 75 L 5 80 M 400 75 L 395 80" stroke="rgba(148, 163, 184, 0.4)" />
+                <text x="200" y="25" fill="rgba(148, 163, 184, 0.4)" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">SIMULATION</text>
+                <text x="200" y="42" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">CFD EVALUATION (OPENFOAM)</text>
+                <text x="200" y="56" fill="rgba(148, 163, 184, 0.7)" font-size="8.5px" text-anchor="middle">Run parallelized ground-effect RANS CFD simulation</text>
+                <text x="200" y="70" fill="#F3B6D0" font-size="8.5px" font-weight="700" text-anchor="middle" letter-spacing="0.02em">OUTPUTS: Lift (Cl) | Drag (Cd) | Lift-to-Drag Ratio (L/D)</text>
+              </g>
+
+              <!-- Node 5: Fitness Scoring -->
+              <g transform="translate(70, 450)">
+                <rect width="400" height="65" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="#F3B6D0" stroke-width="1" />
+                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="#F3B6D0" />
+                <text x="200" y="25" fill="#F3B6D0" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">MERIT VALUE</text>
+                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">FITNESS SCORING</text>
+                <text x="200" y="53" fill="rgba(148, 163, 184, 0.9)" font-size="9px" text-anchor="middle">Fitness Objective: Maximise L/D Ratio</text>
+              </g>
+
+              <!-- Node 6: Selection -->
+              <g transform="translate(70, 550)">
+                <rect width="400" height="65" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="#F3B6D0" stroke-width="1" />
+                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="#F3B6D0" />
+                <text x="200" y="25" fill="#F3B6D0" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">ELITISM &amp; SURVIVAL</text>
+                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">SELECTION (SURVIVAL)</text>
+                <text x="200" y="53" fill="rgba(148, 163, 184, 0.9)" font-size="9px" text-anchor="middle">Select: Top 20% elite + 20% runner-ups</text>
+              </g>
+
+              <!-- Node 7: Crossover -->
+              <g transform="translate(70, 650)">
+                <rect width="400" height="65" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="#F3B6D0" stroke-width="1" />
+                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="#F3B6D0" />
+                <text x="200" y="25" fill="#F3B6D0" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">REPRODUCTION</text>
+                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">CROSSOVER (BREEDING)</text>
+                <text x="200" y="53" fill="rgba(148, 163, 184, 0.9)" font-size="9px" text-anchor="middle">Combine genome parameters from parent wings</text>
+              </g>
+
+              <!-- Node 8: Mutation -->
+              <g transform="translate(70, 750)">
+                <rect width="400" height="90" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="#F3B6D0" stroke-width="1" />
+                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 85 L 5 90 M 400 85 L 395 90" stroke="#F3B6D0" />
+                <text x="200" y="25" fill="#F3B6D0" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">GENETIC SHUFFLE</text>
+                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">MUTATION (DIVERSIFICATION)</text>
+                <text x="200" y="58" fill="rgba(148, 163, 184, 0.9)" font-size="8.5px" text-anchor="middle">Apply modifications to airfoil profiles, section twists, chord lengths,</text>
+                <text x="200" y="74" fill="rgba(148, 163, 184, 0.9)" font-size="8.5px" text-anchor="middle">spanwise wing curvature, and winglet geometries</text>
+              </g>
+
+              <!-- Node 9: Next Gen -->
+              <g transform="translate(70, 870)">
+                <rect width="400" height="65" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="#F3B6D0" stroke-width="1" />
+                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="#F3B6D0" />
+                <text x="200" y="25" fill="#F3B6D0" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">ITERATION ASSEMBLY</text>
+                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">NEXT GEN POPULATION</text>
+                <text x="200" y="53" fill="rgba(148, 163, 184, 0.9)" font-size="9px" text-anchor="middle">Assemble evolved population pool</text>
+              </g>
+
+              <!-- Node 10: Decision (Next Gen?) -->
+              <g transform="translate(270, 1005)">
+                <polygon points="0,-40 100,0 0,40 -100,0" fill="rgba(15, 23, 42, 0.9)" stroke="#F3B6D0" stroke-width="1.5" />
+                <text x="0" y="5" fill="#ffffff" font-size="10px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">NEXT GEN?</text>
+                <text x="0" y="20" fill="rgba(148, 163, 184, 0.6)" font-size="7.5px" text-anchor="middle">GEN == 10</text>
+              </g>-serif">NEXT GEN POPULATION</text>
+                <text x="200" y="53" fill="rgba(148, 163, 184, 0.9)" font-size="9px" text-anchor="middle">Assemble evolved population pool</text>
+              </g>
+
+              <!-- Node 10: Decision (Generations Met?) -->
+              <g transform="translate(270, 1005)">
+                <polygon points="0,-40 100,0 0,40 -100,0" fill="rgba(15, 23, 42, 0.9)" stroke="#F3B6D0" stroke-width="1.5" />
+                <text x="0" y="5" fill="#ffffff" font-size="10px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">GENERATIONS MET?</text>
+                <text x="0" y="20" fill="rgba(148, 163, 184, 0.6)" font-size="7.5px" text-anchor="middle">GEN == 10</text>
+              </g>
+
+              <!-- Node 11: Optimised Wing Design -->
+              <g transform="translate(70, 1075)">
+                <rect width="400" height="65" rx="4" fill="rgba(244, 182, 194, 0.05)" stroke="rgba(244, 182, 194, 0.3)" stroke-width="1" />
+                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="rgba(244, 182, 194, 0.4)" />
+                <text x="200" y="25" fill="rgba(244, 182, 194, 0.6)" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">EXTRAPOLATION</text>
+                <text x="200" y="42" fill="#ffffff" font-size="12px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif" letter-spacing="0.02em">OPTIMISED WING DESIGN</text>
+                <text x="200" y="54" fill="rgba(148, 163, 184, 0.8)" font-size="8.5px" text-anchor="middle">Highest-performing evolved wing profile exported</text>
+              </g>
+            </svg>
+          </div>
+        `;
+      } else {
+        flowchartPanel.innerHTML = `
+          <p class="modal-section-heading">PROJECT WORKFLOW</p>
+          <div class="flowchart-nodes">
+            ${data.flowchart.steps
+              .map((step, index) => {
+                const isActive = step.active ? "is-active" : "";
+                const statusLabel = step.active ? "CURRENT STAGE" : step.status || "UPCOMING";
+                return `
+                  <div class="flowchart-node-card ${isActive}" style="--node-index: ${index}">
+                    <div class="node-indicator">
+                      <span class="node-dot"></span>
+                      ${step.active ? '<span class="node-pulse"></span>' : ""}
                     </div>
-                    <h4>${step.title}</h4>
-                    <p>${step.description}</p>
-                    ${step.subtext ? `<div class="node-subtext">${step.subtext}</div>` : ""}
+                    <div class="node-content">
+                      <div class="node-badge-row">
+                        <span class="node-status">${statusLabel}</span>
+                        ${step.tag ? `<span class="node-tag">${step.tag}</span>` : ""}
+                      </div>
+                      <h4>${step.title}</h4>
+                      <p>${step.description}</p>
+                      ${step.subtext ? `<div class="node-subtext">${step.subtext}</div>` : ""}
+                    </div>
                   </div>
-                </div>
-              `;
-            })
-            .join("")}
-        </div>
-      `;
+                `;
+              })
+              .join("")}
+          </div>
+        `;
+      }
     } else {
       flowchartPanel.setAttribute("aria-hidden", "true");
       flowchartPanel.innerHTML = "";
@@ -2691,11 +2930,6 @@ function renderMediaViewerItem(item) {
     img.src = item.src;
     img.alt = displayTitle;
     mediaViewerDisplay.appendChild(img);
-
-    const tag = document.createElement("div");
-    tag.className = "media-viewer-tag";
-    tag.textContent = displayTitle;
-    mediaViewerDisplay.appendChild(tag);
   } else if (item.type === "video") {
     const video = document.createElement("video");
     video.src = item.src;

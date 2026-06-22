@@ -804,7 +804,7 @@ h3 {
   position: relative;
   z-index: 1;
   width: 100%;
-  height: clamp(180px, 18vh, 240px);
+  height: clamp(216px, 21.6vh, 288px);
   overflow: hidden;
   margin-top: 16px;
 }
@@ -1602,12 +1602,36 @@ h3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .about .section-kicker {
-    grid-template-columns: 1fr;
+  .about {
+    display: flex;
+    flex-direction: column;
   }
 
-  .social-rail {
+  .about .section-heading {
+    order: 1;
+  }
+
+  .about .about-layout {
+    order: 2;
+  }
+
+  .about .social-rail {
+    order: 3;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 24px;
+    margin-bottom: 24px;
+  }
+
+  .about .about-closing {
+    order: 4;
+  }
+
+  .about .profile-stack {
+    order: 5;
+  }
+
+  .about .section-kicker {
+    grid-template-columns: 1fr;
   }
 
   .social-rail a {
@@ -1622,7 +1646,7 @@ h3 {
   .profile-static {
     border-left: none;
     border-top: 1px solid rgba(148, 163, 184, 0.12);
-    height: 360px;
+    height: 468px;
   }
 
   .profile-static img {
@@ -1631,11 +1655,11 @@ h3 {
   }
 
   .profile-stack {
-    min-height: 269px;
+    min-height: 215px;
   }
 
   .photo-roll {
-    inset: 10px 14px 14px 14px;
+    inset: 7px 10px 10px 10px;
     /* Seamless horizontal fade mask */
     mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
     -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
@@ -1646,13 +1670,13 @@ h3 {
     align-items: center;
     width: max-content;
     height: auto;
-    padding: 14px 0;
+    padding: 10px 0;
     gap: 12px;
   }
 
   .roll-frame {
     flex: 0 0 auto;
-    width: 288px;
+    width: auto;
     aspect-ratio: 4 / 3;
   }
 
@@ -1800,25 +1824,25 @@ h3 {
   }
 
   .profile-static {
-    height: 230px;
+    height: 300px;
   }
 
   .profile-stack {
-    min-height: 221px;
+    min-height: 177px;
   }
 
   .photo-roll {
-    inset: 4px 10px 12px 10px;
+    inset: 3px 7px 8px 7px;
     border-radius: 4px;
   }
 
   .roll-track {
     gap: 10px;
-    padding: 10px 0;
+    padding: 7px 0;
   }
 
   .roll-frame {
-    width: 230px;
+    width: auto;
     border-radius: 4px;
   }
 
@@ -1834,7 +1858,7 @@ h3 {
   }
 
   .project-media {
-    min-height: 180px;
+    aspect-ratio: 4 / 3;
   }
 
   .project-body {
@@ -2003,11 +2027,11 @@ h3 {
   }
 
   .roll-frame {
-    width: 234px;
+    width: auto;
   }
 
   .profile-stack {
-    min-height: 228px;
+    min-height: 182px;
   }
 
   .note-card {
@@ -2398,6 +2422,17 @@ body.modal-open {
 
 .modal-visual-frame.flowchart-mode .flowchart-panel {
   display: block;
+  inset: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.aerospace-flowchart-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .flowchart-header {
@@ -2408,11 +2443,11 @@ body.modal-open {
 
 .flowchart-header span {
   display: block;
-  color: var(--muted);
+  color: var(--pink);
   font-family: "JetBrains Mono", ui-monospace, monospace;
-  font-size: 0.58rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
@@ -2971,8 +3006,22 @@ body.modal-open {
   background: rgba(148, 163, 184, 0.06);
 }
 
+.modal-section-heading + .modal-telemetry {
+  margin-top: 10px;
+}
+
 .modal-telemetry.single-item {
   grid-template-columns: 1fr;
+}
+
+.modal-telemetry.three-items {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.modal-telemetry.three-items span {
+  color: var(--pink);
+  font-weight: 700;
+  font-size: 0.65rem;
 }
 
 .modal-telemetry.single-item div {
