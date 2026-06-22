@@ -2570,7 +2570,7 @@ function openModal(projectId) {
               <!-- Left side Loop Back connection path (scaled outward to X=30) -->
               <path d="M 170 1005 L 30 1005 L 30 367 L 70 367" fill="none" stroke="#F3B6D0" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-pink)" filter="url(#glow-pink)" />
               <text x="40" y="995" fill="#F3B6D0" font-size="9px" font-weight="700">NO [GEN &lt; 10]</text>
-              <text x="40" y="358" fill="#F3B6D0" font-size="8px" letter-spacing="0.05em">LOOP: GEN ++</text>
+              <text x="4" y="358" fill="#F3B6D0" font-size="8px" letter-spacing="0.05em">LOOP: GEN ++</text>
 
               <!-- YES path to output -->
               <line x1="270" y1="1045" x2="270" y2="1075" stroke="rgba(148, 163, 184, 0.4)" stroke-width="1.5" marker-end="url(#arrow)" />
@@ -2605,9 +2605,9 @@ function openModal(projectId) {
 
               <!-- Node 4: CFD Evaluation -->
               <g transform="translate(70, 320)">
-                <rect width="400" height="80" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(148, 163, 184, 0.2)" stroke-width="1" />
-                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 75 L 5 80 M 400 75 L 395 80" stroke="rgba(148, 163, 184, 0.4)" />
-                <text x="200" y="25" fill="rgba(148, 163, 184, 0.4)" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">SIMULATION</text>
+                <rect width="400" height="80" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="#F3B6D0" stroke-width="1" />
+                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 75 L 5 80 M 400 75 L 395 80" stroke="#F3B6D0" />
+                <text x="200" y="25" fill="#F3B6D0" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">SIMULATION</text>
                 <text x="200" y="42" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">CFD EVALUATION (OPENFOAM)</text>
                 <text x="200" y="56" fill="rgba(148, 163, 184, 0.7)" font-size="8.5px" text-anchor="middle">Run parallelized ground-effect RANS CFD simulation</text>
                 <text x="200" y="70" fill="#F3B6D0" font-size="8.5px" font-weight="700" text-anchor="middle" letter-spacing="0.02em">OUTPUTS: Lift (Cl) | Drag (Cd) | Lift-to-Drag Ratio (L/D)</text>
@@ -2659,19 +2659,10 @@ function openModal(projectId) {
                 <text x="200" y="53" fill="rgba(148, 163, 184, 0.9)" font-size="9px" text-anchor="middle">Assemble evolved population pool</text>
               </g>
 
-              <!-- Node 10: Decision (Next Gen?) -->
+              <!-- Node 10: Decision (Stop?) -->
               <g transform="translate(270, 1005)">
                 <polygon points="0,-40 100,0 0,40 -100,0" fill="rgba(15, 23, 42, 0.9)" stroke="#F3B6D0" stroke-width="1.5" />
-                <text x="0" y="5" fill="#ffffff" font-size="10px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">NEXT GEN?</text>
-                <text x="0" y="20" fill="rgba(148, 163, 184, 0.6)" font-size="7.5px" text-anchor="middle">GEN == 10</text>
-              </g>-serif">NEXT GEN POPULATION</text>
-                <text x="200" y="53" fill="rgba(148, 163, 184, 0.9)" font-size="9px" text-anchor="middle">Assemble evolved population pool</text>
-              </g>
-
-              <!-- Node 10: Decision (Generations Met?) -->
-              <g transform="translate(270, 1005)">
-                <polygon points="0,-40 100,0 0,40 -100,0" fill="rgba(15, 23, 42, 0.9)" stroke="#F3B6D0" stroke-width="1.5" />
-                <text x="0" y="5" fill="#ffffff" font-size="10px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">GENERATIONS MET?</text>
+                <text x="0" y="5" fill="#ffffff" font-size="10px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">STOP?</text>
                 <text x="0" y="20" fill="rgba(148, 163, 184, 0.6)" font-size="7.5px" text-anchor="middle">GEN == 10</text>
               </g>
 
