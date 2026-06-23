@@ -1051,6 +1051,14 @@ const projectData = {
         description: "Generation-to-generation comparison of lift and drag coefficient values."
       },
       {
+        type: "pdf",
+        src: "./assets/projects/genetic-aerodynamic-optimisation/Genetics Aerodynamics Optimisation_Methodology.pdf",
+        label: "Methodology Slides",
+        description: "Design search methodology detailing the parametric CAD generation and genetic algorithm breeding loops.",
+        showLogos: false,
+        showSubtitle: false
+      },
+      {
         type: "album",
         label: "Evolution Generations Run",
         images: [
@@ -2429,15 +2437,23 @@ function openModal(projectId) {
       } else if (item.type === "video") {
         return `<div class="modal-media-slot has-media" data-index="${index}"><video src="${item.src}" preload="metadata"></video></div>`;
       } else if (item.type === "pdf") {
+        const showLogos = item.showLogos !== false;
+        const logosHtml = showLogos
+          ? `<div class="pdf-card-logos">
+              <span>SIT</span>
+              <span>UoG</span>
+            </div>`
+          : '';
+        const subtitle = item.subtitle !== undefined
+          ? item.subtitle
+          : (item.showSubtitle !== false ? "LES-Based Investigation of Unsteady Wake Effects on the Rear Wing in Tandem WIG Configuration" : "");
+        const subtitleHtml = subtitle ? `<p>${subtitle}</p>` : '';
         return `<div class="modal-media-slot has-media pdf-slot" data-index="${index}">
           <div class="pdf-card-preview" aria-hidden="true">
             <div class="pdf-card-topline"></div>
-            <div class="pdf-card-logos">
-              <span>SIT</span>
-              <span>UoG</span>
-            </div>
+            ${logosHtml}
             <h4>${item.label || "LES-Based Investigation Report"}</h4>
-            <p>LES-Based Investigation of Unsteady Wake Effects on the Rear Wing in Tandem WIG Configuration</p>
+            ${subtitleHtml}
             <span class="pdf-card-author">Carl Louis</span>
           </div>
         </div>`;
