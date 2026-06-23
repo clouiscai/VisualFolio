@@ -1045,6 +1045,12 @@ const projectData = {
     ],
     media: [
       {
+        type: "image",
+        src: "./assets/projects/genetic-aerodynamic-optimisation/lift-drag-gen-to-gen-comparison.gif",
+        alt: "Lift and Drag Results",
+        description: "Generation-to-generation comparison of lift and drag coefficient values."
+      },
+      {
         type: "album",
         label: "Evolution Generations Run",
         images: [
@@ -1124,7 +1130,7 @@ const projectData = {
       },
       {
         type: "album",
-        label: "Aerodynamic Simulation Results",
+        label: "Aerodynamic Simulations",
         images: [
           {
             type: "image",
@@ -2682,10 +2688,10 @@ function openModal(projectId) {
           <p class="modal-section-heading">PROJECT WORKFLOW</p>
           <div class="flowchart-nodes">
             ${data.flowchart.steps
-              .map((step, index) => {
-                const isActive = step.active ? "is-active" : "";
-                const statusLabel = step.active ? "CURRENT STAGE" : step.status || "UPCOMING";
-                return `
+            .map((step, index) => {
+              const isActive = step.active ? "is-active" : "";
+              const statusLabel = step.active ? "CURRENT STAGE" : step.status || "UPCOMING";
+              return `
                   <div class="flowchart-node-card ${isActive}" style="--node-index: ${index}">
                     <div class="node-indicator">
                       <span class="node-dot"></span>
@@ -2702,8 +2708,8 @@ function openModal(projectId) {
                     </div>
                   </div>
                 `;
-              })
-              .join("")}
+            })
+            .join("")}
           </div>
         `;
       }
