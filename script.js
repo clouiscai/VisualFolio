@@ -1045,6 +1045,24 @@ const projectData = {
     ],
     media: [
       {
+        type: "album",
+        label: "Performance Distribution of Population and Optimised Design",
+        images: [
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/design_108_liftcoef_distri.jpg",
+            alt: "Lift Coefficient Distribution of Population and Optimised Design",
+            description: "Lift coefficient distribution comparing the genetic population wings against the optimized design_108 profile."
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/design_108_dragcoef_distri.jpg",
+            alt: "Drag Coefficient Distribution of Population and Optimised Design",
+            description: "Drag coefficient distribution comparing the genetic population wings against the optimized design_108 profile."
+          }
+        ]
+      },
+      {
         type: "image",
         src: "./assets/projects/genetic-aerodynamic-optimisation/lift-drag-gen-to-gen-comparison.gif",
         alt: "Lift and Drag Results",
