@@ -1046,19 +1046,55 @@ const projectData = {
     media: [
       {
         type: "album",
+        label: "Best Design Geometries",
+        images: [
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/best_design_iso.jpg",
+            alt: "Best Design Isometric View",
+            description: "Isometric view of the optimized wing design geometry."
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/best_design_top.jpg",
+            alt: "Best Design Top View",
+            description: "Top-down view of the optimized wing design geometry."
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/best_design_front.jpg",
+            alt: "Best Design Front View",
+            description: "Front view of the optimized wing design geometry."
+          },
+          {
+            type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/best_design_side.jpg",
+            alt: "Best Design Side View",
+            description: "Side profile view of the optimized wing design geometry."
+          }
+        ]
+      },
+      {
+        type: "album",
         label: "Performance Distribution of Population and Optimised Design",
         images: [
           {
             type: "image",
+            src: "./assets/projects/genetic-aerodynamic-optimisation/design_108_lifttodrag_distri.jpg",
+            alt: "Lift-to-Drag Ratio Distribution of Population and Optimised Design",
+            description: "Lift-to-drag ratio distribution comparing the genetic population wings against the optimized profiles."
+          },
+          {
+            type: "image",
             src: "./assets/projects/genetic-aerodynamic-optimisation/design_108_liftcoef_distri.jpg",
             alt: "Lift Coefficient Distribution of Population and Optimised Design",
-            description: "Lift coefficient distribution comparing the genetic population wings against the optimized design_108 profile."
+            description: "Lift coefficient distribution comparing the genetic population wings against the optimized profiles."
           },
           {
             type: "image",
             src: "./assets/projects/genetic-aerodynamic-optimisation/design_108_dragcoef_distri.jpg",
             alt: "Drag Coefficient Distribution of Population and Optimised Design",
-            description: "Drag coefficient distribution comparing the genetic population wings against the optimized design_108 profile."
+            description: "Drag coefficient distribution comparing the genetic population wings against the optimized profiles."
           }
         ]
       },
@@ -1191,7 +1227,7 @@ const projectData = {
         ]
       }
     ],
-    tags: ["Evolutionary Model", "OpenFOAM", "ForgeCAD"],
+    tags: ["Evolutionary Model", "OpenFOAM", "ForgeCAD", "Claude Opus 4.7", "Codex GPT 5.5"],
     flowchart: {
       steps: [
         {
@@ -2575,7 +2611,7 @@ function openModal(projectId) {
         flowchartPanel.innerHTML = `
           <p class="modal-section-heading">PROJECT WORKFLOW</p>
           <div class="aerospace-flowchart-container">
-            <svg width="100%" viewBox="0 0 540 1150" xmlns="http://www.w3.org/2000/svg" style="background: transparent; font-family: 'JetBrains Mono', monospace;">
+            <svg width="100%" viewBox="0 0 540 855" xmlns="http://www.w3.org/2000/svg" style="background: transparent; font-family: 'JetBrains Mono', monospace;">
               <defs>
                 <!-- Glow filter -->
                 <filter id="glow-pink" x="-20%" y="-20%" width="140%" height="140%">
@@ -2595,84 +2631,62 @@ function openModal(projectId) {
               </defs>
 
               <!-- Standard top down connectors -->
-              <line x1="270" y1="85" x2="270" y2="120" stroke="rgba(148, 163, 184, 0.3)" stroke-width="1.5" marker-end="url(#arrow)" />
-              <line x1="270" y1="185" x2="270" y2="220" stroke="rgba(148, 163, 184, 0.3)" stroke-width="1.5" marker-end="url(#arrow)" />
-              <line x1="270" y1="285" x2="270" y2="320" stroke="rgba(148, 163, 184, 0.3)" stroke-width="1.5" marker-end="url(#arrow)" />
+              <line x1="270" y1="100" x2="270" y2="135" stroke="rgba(148, 163, 184, 0.3)" stroke-width="1.5" marker-end="url(#arrow)" />
+              <line x1="270" y1="200" x2="270" y2="235" stroke="rgba(148, 163, 184, 0.3)" stroke-width="1.5" marker-end="url(#arrow)" />
 
               <!-- Connectors inside recursive loop -->
-              <line x1="270" y1="400" x2="270" y2="450" stroke="#F3B6D0" stroke-width="1.5" marker-end="url(#arrow-pink)" />
-              <line x1="270" y1="515" x2="270" y2="550" stroke="#F3B6D0" stroke-width="1.5" marker-end="url(#arrow-pink)" />
-              <line x1="270" y1="615" x2="270" y2="650" stroke="#F3B6D0" stroke-width="1.5" marker-end="url(#arrow-pink)" />
-              <line x1="270" y1="715" x2="270" y2="750" stroke="#F3B6D0" stroke-width="1.5" marker-end="url(#arrow-pink)" />
-              <line x1="270" y1="840" x2="270" y2="870" stroke="#F3B6D0" stroke-width="1.5" marker-end="url(#arrow-pink)" />
-              <line x1="270" y1="935" x2="270" y2="965" stroke="#F3B6D0" stroke-width="1.5" marker-end="url(#arrow-pink)" />
+              <line x1="270" y1="300" x2="270" y2="335" stroke="#F3B6D0" stroke-width="1.5" marker-end="url(#arrow-pink)" />
+              <line x1="270" y1="400" x2="270" y2="435" stroke="#F3B6D0" stroke-width="1.5" marker-end="url(#arrow-pink)" />
+              <line x1="270" y1="500" x2="270" y2="535" stroke="#F3B6D0" stroke-width="1.5" marker-end="url(#arrow-pink)" />
+              <line x1="270" y1="625" x2="270" y2="650" stroke="#F3B6D0" stroke-width="1.5" marker-end="url(#arrow-pink)" />
 
               <!-- Left side Loop Back connection path (scaled outward to X=30) -->
-              <path d="M 170 1005 L 30 1005 L 30 367 L 70 367" fill="none" stroke="#F3B6D0" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-pink)" filter="url(#glow-pink)" />
-              <text x="40" y="995" fill="#F3B6D0" font-size="9px" font-weight="700">NO [GEN &lt; 10]</text>
-              <text x="4" y="358" fill="#F3B6D0" font-size="8px" letter-spacing="0.05em">LOOP: GEN ++</text>
+              <path d="M 170 690 L 30 690 L 30 267 L 70 267" fill="none" stroke="#F3B6D0" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-pink)" filter="url(#glow-pink)" />
+              <text x="40" y="680" fill="#F3B6D0" font-size="9px" font-weight="700">NO [GEN &lt; 10]</text>
+              <text x="4" y="258" fill="#F3B6D0" font-size="8px" letter-spacing="0.05em">LOOP: GEN ++</text>
 
               <!-- YES path to output -->
-              <line x1="270" y1="1045" x2="270" y2="1075" stroke="rgba(148, 163, 184, 0.4)" stroke-width="1.5" marker-end="url(#arrow)" />
-              <text x="280" y="1063" fill="rgba(148, 163, 184, 0.6)" font-size="9px" font-weight="700">YES [GEN == 10]</text>
+              <line x1="270" y1="730" x2="270" y2="760" stroke="rgba(148, 163, 184, 0.4)" stroke-width="1.5" marker-end="url(#arrow)" />
+              <text x="280" y="748" fill="rgba(148, 163, 184, 0.6)" font-size="9px" font-weight="700">YES [GEN == 10]</text>
 
-              <!-- Node 1: Initial Population -->
+              <!-- Node 1: Initial Population Geometry Generation -->
               <g transform="translate(70, 20)">
-                <rect width="400" height="65" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(148, 163, 184, 0.2)" stroke-width="1" />
-                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="rgba(148, 163, 184, 0.4)" />
-                <text x="200" y="25" fill="rgba(148, 163, 184, 0.4)" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">SEEDING</text>
-                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">INITIAL POPULATION</text>
-                <text x="200" y="53" fill="rgba(148, 163, 184, 0.7)" font-size="9px" text-anchor="middle">Generate 10 random wing geometries</text>
+                <rect width="400" height="80" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(148, 163, 184, 0.2)" stroke-width="1" />
+                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 75 L 5 80 M 400 75 L 395 80" stroke="rgba(148, 163, 184, 0.4)" />
+                <text x="200" y="25" fill="rgba(148, 163, 184, 0.4)" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">SEEDING &amp; CAD SYNTHESIS</text>
+                <text x="200" y="42" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">INITIAL POPULATION GEOMETRY GENERATION</text>
+                <text x="200" y="58" fill="rgba(148, 163, 184, 0.7)" font-size="9px" text-anchor="middle">Generate 10 random wing genomes &amp; synthesize 3D wing CAD models</text>
               </g>
 
-              <!-- Node 2: Geometry Generation -->
-              <g transform="translate(70, 120)">
-                <rect width="400" height="65" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(148, 163, 184, 0.2)" stroke-width="1" />
-                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="rgba(148, 163, 184, 0.4)" />
-                <text x="200" y="25" fill="rgba(148, 163, 184, 0.4)" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">CAD SYNTHESIS</text>
-                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">GEOMETRY GENERATION</text>
-                <text x="200" y="53" fill="rgba(148, 163, 184, 0.7)" font-size="8.5px" text-anchor="middle">Convert genome parameters into 3D wing/winglet</text>
-              </g>
-
-              <!-- Node 3: Mesh Generation -->
-              <g transform="translate(70, 220)">
+              <!-- Node 2: Standard Mesh setup -->
+              <g transform="translate(70, 135)">
                 <rect width="400" height="65" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(148, 163, 184, 0.2)" stroke-width="1" />
                 <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="rgba(148, 163, 184, 0.4)" />
                 <text x="200" y="25" fill="rgba(148, 163, 184, 0.4)" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">DISCRETIZATION</text>
-                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">MESH GENERATION</text>
+                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">STANDARD MESH SETUP</text>
                 <text x="200" y="53" fill="rgba(148, 163, 184, 0.7)" font-size="9px" text-anchor="middle">Generate CFD mesh automatically</text>
               </g>
 
-              <!-- Node 4: CFD Evaluation -->
-              <g transform="translate(70, 320)">
-                <rect width="400" height="80" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="#F3B6D0" stroke-width="1" />
-                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 75 L 5 80 M 400 75 L 395 80" stroke="#F3B6D0" />
+              <!-- Node 3: CFD Evaluation -->
+              <g transform="translate(70, 235)">
+                <rect width="400" height="65" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="#F3B6D0" stroke-width="1" />
+                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="#F3B6D0" />
                 <text x="200" y="25" fill="#F3B6D0" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">SIMULATION</text>
-                <text x="200" y="42" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">CFD EVALUATION (OPENFOAM)</text>
-                <text x="200" y="56" fill="rgba(148, 163, 184, 0.7)" font-size="8.5px" text-anchor="middle">Run parallelized ground-effect RANS CFD simulation</text>
-                <text x="200" y="70" fill="#F3B6D0" font-size="8.5px" font-weight="700" text-anchor="middle" letter-spacing="0.02em">OUTPUTS: Lift (Cl) | Drag (Cd) | Lift-to-Drag Ratio (L/D)</text>
+                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">CFD EVALUATION (OPENFOAM)</text>
+                <text x="200" y="53" fill="rgba(148, 163, 184, 0.7)" font-size="8.5px" text-anchor="middle">Run parallelized ground-effect RANS CFD simulation</text>
               </g>
 
-              <!-- Node 5: Fitness Scoring -->
-              <g transform="translate(70, 450)">
+              <!-- Node 4: Fitness Scoring & Selection -->
+              <g transform="translate(70, 335)">
                 <rect width="400" height="65" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="#F3B6D0" stroke-width="1" />
                 <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="#F3B6D0" />
-                <text x="200" y="25" fill="#F3B6D0" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">MERIT VALUE</text>
-                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">FITNESS SCORING</text>
-                <text x="200" y="53" fill="rgba(148, 163, 184, 0.9)" font-size="9px" text-anchor="middle">Fitness Objective: Maximise L/D Ratio</text>
+                <text x="200" y="25" fill="#F3B6D0" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">MERIT VALUE &amp; SURVIVAL</text>
+                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">FITNESS SCORING &amp; SELECTION</text>
+                <text x="200" y="53" fill="rgba(148, 163, 184, 0.9)" font-size="8.5px" text-anchor="middle">Select: Top 20% elite + 20% runner-ups</text>
               </g>
 
-              <!-- Node 6: Selection -->
-              <g transform="translate(70, 550)">
-                <rect width="400" height="65" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="#F3B6D0" stroke-width="1" />
-                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="#F3B6D0" />
-                <text x="200" y="25" fill="#F3B6D0" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">ELITISM &amp; SURVIVAL</text>
-                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">SELECTION (SURVIVAL)</text>
-                <text x="200" y="53" fill="rgba(148, 163, 184, 0.9)" font-size="9px" text-anchor="middle">Select: Top 20% elite + 20% runner-ups</text>
-              </g>
-
-              <!-- Node 7: Crossover -->
-              <g transform="translate(70, 650)">
+              <!-- Node 5: Crossover -->
+              <g transform="translate(70, 435)">
                 <rect width="400" height="65" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="#F3B6D0" stroke-width="1" />
                 <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="#F3B6D0" />
                 <text x="200" y="25" fill="#F3B6D0" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">REPRODUCTION</text>
@@ -2680,8 +2694,8 @@ function openModal(projectId) {
                 <text x="200" y="53" fill="rgba(148, 163, 184, 0.9)" font-size="9px" text-anchor="middle">Combine genome parameters from parent wings</text>
               </g>
 
-              <!-- Node 8: Mutation -->
-              <g transform="translate(70, 750)">
+              <!-- Node 6: Mutation -->
+              <g transform="translate(70, 535)">
                 <rect width="400" height="90" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="#F3B6D0" stroke-width="1" />
                 <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 85 L 5 90 M 400 85 L 395 90" stroke="#F3B6D0" />
                 <text x="200" y="25" fill="#F3B6D0" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">GENETIC SHUFFLE</text>
@@ -2690,24 +2704,15 @@ function openModal(projectId) {
                 <text x="200" y="74" fill="rgba(148, 163, 184, 0.9)" font-size="8.5px" text-anchor="middle">spanwise wing curvature, and winglet geometries</text>
               </g>
 
-              <!-- Node 9: Next Gen -->
-              <g transform="translate(70, 870)">
-                <rect width="400" height="65" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="#F3B6D0" stroke-width="1" />
-                <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="#F3B6D0" />
-                <text x="200" y="25" fill="#F3B6D0" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">ITERATION ASSEMBLY</text>
-                <text x="200" y="40" fill="#ffffff" font-size="11px" font-weight="700" text-anchor="middle" font-family="'Space Grotesk', sans-serif">NEXT GEN POPULATION</text>
-                <text x="200" y="53" fill="rgba(148, 163, 184, 0.9)" font-size="9px" text-anchor="middle">Assemble evolved population pool</text>
-              </g>
-
-              <!-- Node 10: Decision (Stop?) -->
-              <g transform="translate(270, 1005)">
+              <!-- Node 7: Decision (Stop?) -->
+              <g transform="translate(270, 690)">
                 <polygon points="0,-40 100,0 0,40 -100,0" fill="rgba(15, 23, 42, 0.9)" stroke="#F3B6D0" stroke-width="1.5" />
                 <text x="0" y="5" fill="#ffffff" font-size="10px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">STOP?</text>
                 <text x="0" y="20" fill="rgba(148, 163, 184, 0.6)" font-size="7.5px" text-anchor="middle">GEN == 10</text>
               </g>
 
-              <!-- Node 11: Optimised Wing Design -->
-              <g transform="translate(70, 1075)">
+              <!-- Node 8: Optimised Wing Design -->
+              <g transform="translate(70, 760)">
                 <rect width="400" height="65" rx="4" fill="rgba(244, 182, 194, 0.05)" stroke="rgba(244, 182, 194, 0.3)" stroke-width="1" />
                 <path d="M 0 5 L 5 0 M 400 5 L 395 0 M 0 60 L 5 65 M 400 60 L 395 65" stroke="rgba(244, 182, 194, 0.4)" />
                 <text x="200" y="25" fill="rgba(244, 182, 194, 0.6)" font-size="9px" font-weight="700" text-anchor="middle" letter-spacing="0.05em">EXTRAPOLATION</text>
