@@ -496,7 +496,7 @@ h3 {
 
 .social-rail {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   align-content: start;
   gap: 12px;
   width: 100%;
@@ -642,6 +642,7 @@ h3 {
   padding: clamp(28px, 2.5vw, 40px);
 }
 
+.identity-copy h1,
 .identity-copy h2 {
   margin-bottom: 12px;
   color: var(--white);
@@ -697,6 +698,61 @@ h3 {
   color: var(--white);
   font-size: 0.88rem;
   line-height: 1.45;
+}
+
+/* Currently At / Company Role */
+.current-role-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.current-role-company {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.current-role-company strong {
+  color: var(--white);
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.company-logo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 4px;
+  transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+  vertical-align: middle;
+  text-decoration: none;
+}
+
+.company-logo-badge:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(244, 182, 194, 0.4);
+  transform: translateY(-1px);
+}
+
+.company-logo-img {
+  display: block;
+  height: 14px;
+  width: auto;
+  max-width: 95px;
+  object-fit: contain;
+}
+
+.current-role-title {
+  color: #b9c8dc;
+  font-size: 0.84rem;
+  font-weight: 400;
+  line-height: 1.4;
 }
 
 /* Currently Building List */
@@ -1617,7 +1673,7 @@ h3 {
 
   .about .social-rail {
     order: 3;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
     margin-top: 24px;
     margin-bottom: 24px;
   }
@@ -1785,6 +1841,7 @@ h3 {
     padding: 22px 18px;
   }
 
+  .identity-copy h1,
   .identity-copy h2 {
     font-size: 2.4rem;
   }
@@ -1795,7 +1852,7 @@ h3 {
   }
 
   .social-rail {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   }
 
   .social-rail a {
@@ -1996,6 +2053,7 @@ h3 {
     font-size: 2.6rem;
   }
 
+  .identity-copy h1,
   .identity-copy h2 {
     font-size: 2rem;
   }
