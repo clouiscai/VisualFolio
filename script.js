@@ -2953,7 +2953,7 @@ function renderMediaViewerItem(item) {
   mediaViewerOverlay.classList.toggle("no-sidebar", Boolean(item.noSidebar));
 
   // Title selection
-  let displayTitle = item.alt || item.label || "Asset view";
+  let displayTitle = item.title || item.alt || item.label || "Asset view";
   mediaViewerTitle.textContent = displayTitle;
 
   // Description selection
