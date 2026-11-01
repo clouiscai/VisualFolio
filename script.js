@@ -90,10 +90,15 @@ function createSpacefield() {
   }
 
   // ── Far background starfield (always present, gives depth) ────────────────
+  // Round soft points with a skewed size distribution (mostly faint pinpricks,
+  // a few brighter stars with a soft halo) and a slow per-star twinkle.
+  const starUniforms = { uTime: { value: 0 }, uPR: { value: 1 } };
   function makeStarfield() {
     const count = lowPower ? 1100 : 2400;
     const pos = new Float32Array(count * 3);
     const col = new Float32Array(count * 3);
+    const size = new Float32Array(count);
+    const phase = new Float32Array(count);
     for (let i = 0; i < count; i++) {
       const u = Math.random() * 2 - 1;
       const th = Math.random() * Math.PI * 2;
@@ -104,23 +109,92 @@ function createSpacefield() {
       pos[i * 3 + 2] = r * Math.sin(th) * rad;
       const tint = Math.random();
       const c = COL.white.clone().lerp(tint < 0.5 ? COL.lavender : COL.rose, Math.random() * 0.45);
-      const b = 0.45 + Math.random() * 0.55;
+      const bright = Math.random() < 0.04;
+      const b = bright ? 0.9 + Math.random() * 0.1 : 0.5 + Math.random() * 0.45;
       col[i * 3] = c.r * b;
       col[i * 3 + 1] = c.g * b;
       col[i * 3 + 2] = c.b * b;
+      size[i] = bright ? 5 + Math.random() * 2 : 1.9 + Math.pow(Math.random(), 2.5) * 2.4;
+      phase[i] = Math.random() * Math.PI * 2;
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    g.setAttribute("color", new THREE.BufferAttribute(col, 3));
-    const m = new THREE.PointsMaterial({
-      size: lowPower ? 2.0 : 2.4,
-      sizeAttenuation: false,
-      vertexColors: true,
+    g.setAttribute("aColor", new THREE.BufferAttribute(col, 3));
+    g.setAttribute("aSize", new THREE.BufferAttribute(size, 1));
+    g.setAttribute("aPhase", new THREE.BufferAttribute(phase, 1));
+    const m = new THREE.ShaderMaterial({
+      uniforms: starUniforms,
+      vertexShader: `
+        attribute vec3 aColor;
+        attribute float aSize;
+        attribute float aPhase;
+        uniform float uTime;
+        uniform float uPR;
+        varying vec3 vColor;
+        varying float vTwinkle;
+        void main() {
+          vColor = aColor;
+          vTwinkle = 0.72 + 0.28 * sin(uTime * (0.6 + fract(aPhase) * 0.9) + aPhase * 7.0);
+          gl_PointSize = aSize * uPR;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `
+        varying vec3 vColor;
+        varying float vTwinkle;
+        void main() {
+          float d = length(gl_PointCoord - 0.5) * 2.0;
+          float core = 1.0 - smoothstep(0.15, 0.5, d);
+          float halo = (1.0 - smoothstep(0.0, 1.0, d)) * 0.3;
+          float a = min(core + halo, 1.0) * vTwinkle;
+          if (a < 0.01) discard;
+          gl_FragColor = vec4(vColor, a);
+        }`,
       transparent: true,
-      opacity: 0.62,
       depthWrite: false,
     });
     return new THREE.Points(g, m);
+  }
+
+  // ── Orbit line with a comet-style trail ───────────────────────────────────
+  // The ring is faint everywhere and brightens just behind its orbiting body;
+  // `head` is that body's angle, updated each frame.
+  function makeOrbit(rx, rz, color, opacity, segments = 128) {
+    const pts = [];
+    const ts = new Float32Array(segments + 1);
+    for (let i = 0; i <= segments; i++) {
+      const t = (i / segments) * Math.PI * 2;
+      pts.push(new THREE.Vector3(Math.cos(t) * rx, 0, Math.sin(t) * rz));
+      ts[i] = t;
+    }
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    geo.setAttribute("aT", new THREE.BufferAttribute(ts, 1));
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        uColor: { value: color.clone() },
+        uOpacity: { value: opacity },
+        uHead: { value: 0 },
+      },
+      vertexShader: `
+        attribute float aT;
+        varying float vT;
+        void main() {
+          vT = aT;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `
+        uniform vec3 uColor;
+        uniform float uOpacity;
+        uniform float uHead;
+        varying float vT;
+        void main() {
+          float behind = mod(uHead - vT, 6.2831853) / 6.2831853;
+          float trail = pow(1.0 - behind, 6.0);
+          gl_FragColor = vec4(uColor, min(uOpacity * (0.45 + 2.4 * trail), 0.62));
+        }`,
+      transparent: true,
+      depthWrite: false,
+    });
+    return { line: new THREE.Line(geo, mat), uniforms: mat.uniforms };
   }
 
   // ── Dotted Earth ─────────────────────────────────────────────────────────
@@ -319,17 +393,12 @@ function createSpacefield() {
     for (const od of orbitDefs) {
       const pivot = new THREE.Group();
       pivot.rotation.set(od.rx, 0, od.rz);
-      const curve = new THREE.EllipseCurve(0, 0, od.r, od.r, 0, Math.PI * 2);
-      const pts = curve.getPoints(120).map((p) => new THREE.Vector3(p.x, 0, p.y));
-      const line = new THREE.LineLoop(
-        new THREE.BufferGeometry().setFromPoints(pts),
-        new THREE.LineBasicMaterial({ color: od.col, transparent: true, opacity: od.op, depthWrite: false })
-      );
-      pivot.add(line);
+      const orbit = makeOrbit(od.r, od.r, od.col, od.op, 160);
+      pivot.add(orbit.line);
       const sat = makeGlow(COL.rose, 1.1, 0.95);
       pivot.add(sat);
       group.add(pivot);
-      sats.push({ sat, r: od.r, speed: 0.25 + Math.random() * 0.2, phase: Math.random() * 6.28 });
+      sats.push({ sat, orbit: orbit.uniforms, r: od.r, speed: 0.25 + Math.random() * 0.2, phase: Math.random() * 6.28 });
     }
 
     return earthObj;
@@ -356,31 +425,24 @@ function createSpacefield() {
       const ecc = 0.9 + Math.random() * 0.08;
       const pivot = new THREE.Group();
       pivot.rotation.set(opt.incline + k * 0.12, Math.random() * 6.28, opt.tilt);
-      const curve = new THREE.EllipseCurve(0, 0, rad, rad * ecc, 0, Math.PI * 2);
-      const pts = curve.getPoints(96).map((p) => new THREE.Vector3(p.x, 0, p.y));
-      const line = new THREE.LineLoop(
-        new THREE.BufferGeometry().setFromPoints(pts),
-        new THREE.LineBasicMaterial({
-          color: opt.ringColor || COL.gray,
-          transparent: true,
-          opacity: opt.ringOpacity || 0.16,
-          depthWrite: false,
-        })
-      );
-      pivot.add(line);
+      const orbit = makeOrbit(rad, rad * ecc, opt.ringColor || COL.gray, opt.ringOpacity || 0.16);
+      pivot.add(orbit.line);
       const pColor = k % 2 ? COL.lavender : COL.rose;
       const planet = makeGlow(pColor, opt.planetSize * (0.8 + Math.random() * 0.5), 0.95);
+      // Crisp centre so each planet reads as a body, not just a soft blob.
+      planet.add(makeGlow(COL.white.clone().lerp(pColor, 0.4), 0.32, 1.0));
       pivot.add(planet);
       group.add(pivot);
       planets.push({
         planet,
+        orbit: orbit.uniforms,
         rad,
         ecc,
         speed: (opt.baseSpeed * 6) / (rad + 4),
         phase: Math.random() * 6.28,
       });
     }
-    return { group, star, corona, planets };
+    return { group, star, corona, planets, starSize: opt.starSize, pulse: Math.random() * 6.28 };
   }
 
   // ── Build the world ──────────────────────────────────────────────────────
@@ -501,6 +563,7 @@ function createSpacefield() {
     const pr = renderer.getPixelRatio();
     earth.dotUniforms.uScale.value = (height * pr) / 2;
     earth.dotUniforms.uMaxSize.value = 6 * pr;
+    starUniforms.uPR.value = pr;
     camera.aspect = width / height;
     buildJourney(camera.aspect);
     camera.updateProjectionMatrix();
@@ -542,14 +605,20 @@ function createSpacefield() {
     for (const s of earth.sats) {
       const a = s.phase + elapsed * 0.001 * s.speed;
       s.sat.position.set(Math.cos(a) * s.r, 0, Math.sin(a) * s.r);
-      s.sat.parent.position.set(0, 0, 0);
+      s.orbit.uHead.value = a;
     }
     for (const sys of systems) {
       for (const pl of sys.planets) {
         const a = pl.phase + elapsed * 0.0006 * pl.speed;
         pl.planet.position.set(Math.cos(a) * pl.rad, 0, Math.sin(a) * pl.rad * pl.ecc);
+        pl.orbit.uHead.value = a;
       }
+      // Slow, shallow breathing so each star feels alive without flickering.
+      const breathe = 1 + Math.sin(elapsed * 0.0011 + sys.pulse) * 0.06;
+      sys.star.scale.setScalar(sys.starSize * breathe);
+      sys.corona.material.opacity = 0.14 * (0.85 + (breathe - 1) * 2.5);
     }
+    starUniforms.uTime.value = elapsed * 0.001;
     starfield.rotation.y = elapsed * 0.000008;
 
     renderer.render(scene, camera);
@@ -1074,9 +1143,6 @@ createSpacefield();
 createSpacecraftScene();
 initPhotoRoll();
 initScrollSpy();
-
-const footerYear = document.getElementById("footer-year");
-if (footerYear) footerYear.textContent = String(new Date().getFullYear());
 
 /* ── Project Detail Modal ── */
 
