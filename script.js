@@ -124,40 +124,134 @@ function createSpacefield() {
   }
 
   // ── Dotted Earth ─────────────────────────────────────────────────────────
-  // Real continents and islands: dots are placed on a Fibonacci sphere, then
-  // each candidate is projected to lon/lat and kept only where an equirectangular
-  // land/water mask says "land". The globe body is just a soft low-alpha pink
-  // sphere; an invisible depth occluder behind it hides the back-hemisphere dots
-  // so the front continents stay clean.
+  // Real continents and islands: dots sit in evenly spaced latitude rows, and
+  // each candidate is kept only where an equirectangular land/water mask says
+  // "land". Dots are round and view-shaded (dim toward the limb, softly lit from
+  // the upper left) so the globe reads as a sphere. The body is a dark core with
+  // a pink fresnel rim, wrapped in a thin atmosphere shell; an invisible depth
+  // occluder hides back-hemisphere dots and orbit segments behind the globe.
   const EARTH_R = 11;
+  const EARTH_TILT = -0.35;
   const EARTH_MASK_URL = import.meta.env.BASE_URL + "assets/background/earth-water.png";
+
+  const FRESNEL_VERT = `
+    varying vec3 vN;
+    varying vec3 vV;
+    void main() {
+      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      vN = normalize(normalMatrix * normal);
+      vV = normalize(-mv.xyz);
+      gl_Position = projectionMatrix * mv;
+    }`;
+
+  const DOT_VERT = `
+    attribute vec3 aColor;
+    uniform float uSize;
+    uniform float uScale;
+    uniform float uMaxSize;
+    varying vec3 vColor;
+    varying float vFacing;
+    varying float vLight;
+    void main() {
+      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      vec3 n = normalize(normalMatrix * position);
+      vFacing = dot(n, normalize(-mv.xyz));
+      vLight = max(dot(n, normalize(vec3(-0.45, 0.55, 0.7))), 0.0);
+      vColor = aColor;
+      gl_PointSize = min(uSize * uScale / -mv.z, uMaxSize);
+      gl_Position = projectionMatrix * mv;
+    }`;
+
+  const DOT_FRAG = `
+    uniform float uOpacity;
+    varying vec3 vColor;
+    varying float vFacing;
+    varying float vLight;
+    void main() {
+      if (vFacing <= 0.0) discard;
+      float d = length(gl_PointCoord - 0.5);
+      float disc = 1.0 - smoothstep(0.28, 0.5, d);
+      float limb = smoothstep(0.0, 0.45, vFacing);
+      float a = disc * uOpacity * mix(0.06, 1.0, limb);
+      if (a < 0.01) discard;
+      gl_FragColor = vec4(vColor * mix(0.5, 1.08, vLight), a);
+    }`;
+
   function makeEarth() {
     const group = new THREE.Group();
 
     // Invisible occluder: writes depth only, so back-side land dots are hidden.
     const occluder = new THREE.Mesh(
-      new THREE.SphereGeometry(EARTH_R * 0.985, 48, 32),
+      new THREE.SphereGeometry(EARTH_R * 0.985, 64, 48),
       new THREE.MeshBasicMaterial({ colorWrite: false })
     );
     group.add(occluder);
 
-    // Soft low-alpha pink globe body.
+    // Globe body: dark navy core that brightens to a soft pink rim at the limb.
     const body = new THREE.Mesh(
-      new THREE.SphereGeometry(EARTH_R * 0.99, 48, 32),
-      new THREE.MeshBasicMaterial({
-        color: COL.pink,
+      new THREE.SphereGeometry(EARTH_R * 0.99, 64, 48),
+      new THREE.ShaderMaterial({
+        uniforms: {
+          uCore: { value: new THREE.Color("#0b1020") },
+          uRim: { value: COL.pink.clone().lerp(COL.lavender, 0.35) },
+        },
+        vertexShader: FRESNEL_VERT,
+        fragmentShader: `
+          uniform vec3 uCore;
+          uniform vec3 uRim;
+          varying vec3 vN;
+          varying vec3 vV;
+          void main() {
+            float rim = pow(1.0 - clamp(dot(vN, vV), 0.0, 1.0), 3.0);
+            gl_FragColor = vec4(mix(uCore, uRim * 0.42, rim), mix(0.36, 0.42, rim));
+          }`,
         transparent: true,
-        opacity: 0.12,
         depthWrite: false,
       })
     );
     group.add(body);
 
-    // Atmosphere glow behind the globe.
-    const halo = makeGlow(COL.lavender.clone().lerp(COL.rose, 0.4), EARTH_R * 3.4, 0.22);
+    // Thin atmosphere: a back-faced shell that glows brightest right at the limb
+    // and fades out within ~5% of the radius.
+    const atmosphere = new THREE.Mesh(
+      new THREE.SphereGeometry(EARTH_R * 1.05, 64, 48),
+      new THREE.ShaderMaterial({
+        uniforms: { uColor: { value: COL.lavender.clone().lerp(COL.rose, 0.5) } },
+        vertexShader: FRESNEL_VERT,
+        fragmentShader: `
+          uniform vec3 uColor;
+          varying vec3 vN;
+          varying vec3 vV;
+          void main() {
+            float g = smoothstep(0.0, 0.3, abs(dot(vN, vV)));
+            gl_FragColor = vec4(uColor, pow(g, 2.2) * 0.13);
+          }`,
+        side: THREE.BackSide,
+        transparent: true,
+        depthWrite: false,
+      })
+    );
+    group.add(atmosphere);
+
+    // Faint wide glow so the globe sits in a little light rather than on flat black.
+    const halo = makeGlow(COL.lavender.clone().lerp(COL.rose, 0.4), EARTH_R * 3.2, 0.12);
     group.add(halo);
 
-    const earthObj = { group, dots: null, sats: [] };
+    // Axial tilt, then spin about the tilted axis.
+    const tilt = new THREE.Group();
+    tilt.rotation.z = EARTH_TILT;
+    const spin = new THREE.Group();
+    tilt.add(spin);
+    group.add(tilt);
+
+    const dotUniforms = {
+      uSize: { value: lowPower ? 0.23 : 0.18 },
+      uScale: { value: 450 },
+      uMaxSize: { value: 12 },
+      uOpacity: { value: 0.95 },
+    };
+
+    const earthObj = { group, spin, dots: null, dotUniforms, sats: [] };
 
     // Sample the land mask and dot the continents (async — mask is a local PNG).
     const img = new Image();
@@ -179,39 +273,40 @@ function createSpacefield() {
         return (data[i] + data[i + 1] + data[i + 2]) / 3 < 110; // land = dark
       };
 
-      const cand = lowPower ? 18000 : 52000;
-      const golden = Math.PI * (3 - Math.sqrt(5));
+      // Evenly spaced latitude rows (alternate rows offset half a step) give a
+      // clean dot-matrix look without the pole spirals of a Fibonacci lattice.
+      const step = lowPower ? 0.028 : 0.018;
+      const rows = Math.round(Math.PI / step);
       const pos = [];
       const col = [];
-      for (let i = 0; i < cand; i++) {
-        const y = 1 - (i / (cand - 1)) * 2;
-        const rad = Math.sqrt(Math.max(0, 1 - y * y));
-        const th = golden * i;
-        const x = Math.cos(th) * rad;
-        const z = Math.sin(th) * rad;
-        const lat = Math.asin(clamp(y, -1, 1));
-        const lon = Math.atan2(z, x);
-        if (!isLand(lon, lat)) continue;
-        pos.push(x * EARTH_R, y * EARTH_R, z * EARTH_R);
-        // Soft white land with a faint warm tint; ice caps a touch brighter.
-        const ice = Math.abs(lat) > 1.2 ? 0.25 : 0;
-        const c = COL.white.clone().lerp(COL.pink, 0.14 + Math.random() * 0.16 - ice * 0.14);
-        const b = 0.62 + Math.random() * 0.3 + ice * 0.15;
-        col.push(c.r * b, c.g * b, c.b * b);
+      for (let r = 1; r < rows; r++) {
+        const lat = -Math.PI / 2 + (r / rows) * Math.PI;
+        const ring = Math.cos(lat);
+        const count = Math.max(1, Math.round((2 * Math.PI * ring) / step));
+        const offset = (r % 2) * 0.5;
+        for (let k = 0; k < count; k++) {
+          const lon = -Math.PI + ((k + offset) / count) * Math.PI * 2;
+          if (!isLand(lon, lat)) continue;
+          pos.push(ring * Math.cos(lon) * EARTH_R, Math.sin(lat) * EARTH_R, ring * Math.sin(lon) * EARTH_R);
+          // Soft white land with a faint warm tint; ice caps a touch brighter.
+          const ice = Math.abs(lat) > 1.2 ? 0.25 : 0;
+          const c = COL.white.clone().lerp(COL.pink, 0.14 + Math.random() * 0.12 - ice * 0.14);
+          const b = 0.72 + Math.random() * 0.2 + ice * 0.12;
+          col.push(c.r * b, c.g * b, c.b * b);
+        }
       }
       const g = new THREE.BufferGeometry();
       g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(pos), 3));
-      g.setAttribute("color", new THREE.BufferAttribute(new Float32Array(col), 3));
-      const m = new THREE.PointsMaterial({
-        size: lowPower ? 0.2 : 0.16,
-        sizeAttenuation: true,
-        vertexColors: true,
+      g.setAttribute("aColor", new THREE.BufferAttribute(new Float32Array(col), 3));
+      const m = new THREE.ShaderMaterial({
+        uniforms: dotUniforms,
+        vertexShader: DOT_VERT,
+        fragmentShader: DOT_FRAG,
         transparent: true,
-        opacity: 0.96,
-        depthWrite: true,
+        depthWrite: false,
       });
       earthObj.dots = new THREE.Points(g, m);
-      group.add(earthObj.dots);
+      spin.add(earthObj.dots);
     };
     img.src = EARTH_MASK_URL;
 
@@ -402,6 +497,10 @@ function createSpacefield() {
     width = window.innerWidth;
     height = window.innerHeight;
     renderer.setSize(width, height, false);
+    // Earth dot size is in world units; this maps it to drawing-buffer pixels.
+    const pr = renderer.getPixelRatio();
+    earth.dotUniforms.uScale.value = (height * pr) / 2;
+    earth.dotUniforms.uMaxSize.value = 6 * pr;
     camera.aspect = width / height;
     buildJourney(camera.aspect);
     camera.updateProjectionMatrix();
@@ -439,7 +538,7 @@ function createSpacefield() {
     camera.updateProjectionMatrix();
 
     // Animate world elements.
-    earth.group.rotation.y = elapsed * 0.00004;
+    earth.spin.rotation.y = elapsed * 0.00004;
     for (const s of earth.sats) {
       const a = s.phase + elapsed * 0.001 * s.speed;
       s.sat.position.set(Math.cos(a) * s.r, 0, Math.sin(a) * s.r);
@@ -716,13 +815,23 @@ function bindHoldToOpen(element, getMediaData) {
 function initPhotoRoll() {
   const roll = document.querySelector(".photo-roll");
   const track = document.querySelector(".roll-track");
+  const toggle = document.querySelector(".roll-toggle");
   if (!roll || !track) return;
 
   let isDragging = false;
+  let dragAxis = null;
   let startX = 0;
+  let startY = 0;
   let currentOffset = 0;
   let startOffset = 0;
   let dragDistance = 0;
+  let focusTarget = null;
+
+  // Auto-scroll stops for any of these; WCAG 2.2.2 needs the explicit user pause.
+  let userPaused = prefersReducedMotion;
+  let hoverPaused = false;
+  let focusPaused = false;
+  let offscreen = false;
 
   const baseSpeed = 0.22;
 
@@ -732,12 +841,29 @@ function initPhotoRoll() {
     return track.children[half].offsetLeft - track.children[0].offsetLeft;
   }
 
+  function wrapOffset(offset) {
+    const loopSize = getLoopSize();
+    if (loopSize <= 0) return offset;
+    if (offset > 0) return offset - loopSize;
+    if (Math.abs(offset) >= loopSize) return offset + loopSize;
+    return offset;
+  }
+
+  function syncToggle() {
+    if (!toggle) return;
+    toggle.setAttribute("aria-pressed", String(userPaused));
+    toggle.setAttribute("aria-label", userPaused ? "Play build log" : "Pause build log");
+  }
+
   function handleStart(e) {
     isDragging = true;
+    dragAxis = null;
+    focusTarget = null;
     roll.classList.add("grabbing");
 
-    const clientX = e.type.startsWith("touch") ? e.touches[0].clientX : e.clientX;
-    startX = clientX;
+    const point = e.type.startsWith("touch") ? e.touches[0] : e;
+    startX = point.clientX;
+    startY = point.clientY;
     startOffset = currentOffset;
     dragDistance = 0;
   }
@@ -745,25 +871,27 @@ function initPhotoRoll() {
   function handleMove(e) {
     if (!isDragging) return;
 
+    const point = e.type.startsWith("touch") ? e.touches[0] : e;
+    const deltaX = point.clientX - startX;
+    const deltaY = point.clientY - startY;
+
+    // On touch, a mostly-vertical swipe is a page scroll: let it through.
+    if (e.type === "touchmove" && dragAxis === null && Math.hypot(deltaX, deltaY) > 6) {
+      dragAxis = Math.abs(deltaX) > Math.abs(deltaY) ? "x" : "y";
+    }
+    if (dragAxis === "y") {
+      handleEnd();
+      return;
+    }
+
     if (e.cancelable) {
       e.preventDefault();
     }
 
-    const clientX = e.type.startsWith("touch") ? e.touches[0].clientX : e.clientX;
-    const deltaX = clientX - startX;
     dragDistance = Math.abs(deltaX);
+    if (getLoopSize() <= 0) return;
 
-    const loopSize = getLoopSize();
-    if (loopSize <= 0) return;
-
-    currentOffset = startOffset + deltaX;
-
-    if (currentOffset > 0) {
-      currentOffset -= loopSize;
-    } else if (Math.abs(currentOffset) >= loopSize) {
-      currentOffset += loopSize;
-    }
-
+    currentOffset = wrapOffset(startOffset + deltaX);
     updateTransform();
   }
 
@@ -778,14 +906,17 @@ function initPhotoRoll() {
   }
 
   function tick() {
-    if (!isDragging) {
-      const loopSize = getLoopSize();
-      if (loopSize > 0) {
-        currentOffset -= baseSpeed;
-        if (Math.abs(currentOffset) >= loopSize) {
-          currentOffset += loopSize;
-        }
+    if (!isDragging && !offscreen) {
+      if (focusTarget !== null) {
+        currentOffset += (focusTarget - currentOffset) * 0.18;
+        if (Math.abs(focusTarget - currentOffset) < 0.5) currentOffset = focusTarget;
         updateTransform();
+      } else if (!userPaused && !hoverPaused && !focusPaused) {
+        const loopSize = getLoopSize();
+        if (loopSize > 0) {
+          currentOffset = wrapOffset(currentOffset - baseSpeed);
+          updateTransform();
+        }
       }
     }
     requestAnimationFrame(tick);
@@ -800,15 +931,61 @@ function initPhotoRoll() {
   window.addEventListener("touchend", handleEnd);
   window.addEventListener("touchcancel", handleEnd);
 
+  roll.addEventListener("mouseenter", () => {
+    hoverPaused = true;
+  });
+  roll.addEventListener("mouseleave", () => {
+    hoverPaused = false;
+  });
+
+  // Keyboard: pause while a frame has focus and glide that frame into view.
+  // Focusing a clipped frame makes the browser scroll the roll natively; fold that scroll
+  // into the transform offset so the marquee keeps a single source of truth.
+  roll.addEventListener("scroll", () => {
+    if (!roll.scrollLeft) return;
+    currentOffset = wrapOffset(currentOffset - roll.scrollLeft);
+    roll.scrollLeft = 0;
+    updateTransform();
+  });
+
+  roll.addEventListener("focusin", (e) => {
+    focusPaused = true;
+    const frame = e.target.closest(".roll-frame");
+    if (!frame) return;
+    const centred = -(frame.offsetLeft + frame.offsetWidth / 2 - roll.clientWidth / 2);
+    focusTarget = Math.min(0, centred);
+    if (prefersReducedMotion) {
+      currentOffset = focusTarget;
+      focusTarget = null;
+      updateTransform();
+    }
+  });
+  roll.addEventListener("focusout", (e) => {
+    if (roll.contains(e.relatedTarget)) return;
+    focusPaused = false;
+    focusTarget = null;
+  });
+
+  toggle?.addEventListener("click", () => {
+    userPaused = !userPaused;
+    focusTarget = null;
+    syncToggle();
+  });
+  syncToggle();
+
+  new IntersectionObserver((entries) => {
+    offscreen = !entries[0].isIntersecting;
+  }).observe(roll);
+
   track.querySelectorAll("img, a, span").forEach((el) => {
     el.addEventListener("dragstart", (e) => e.preventDefault());
   });
 
+  const frames = [...track.querySelectorAll(".roll-frame")];
   const uniqueImages = [];
-  const rollImgs = track.querySelectorAll(".roll-frame img");
-  rollImgs.forEach((img) => {
-    const src = img.getAttribute("src");
-    if (!uniqueImages.some((item) => item.src === src)) {
+  frames.forEach((frame) => {
+    const img = frame.querySelector("img");
+    if (img && !uniqueImages.some((item) => item.src === img.src)) {
       uniqueImages.push({
         type: "image",
         src: img.src,
@@ -819,63 +996,87 @@ function initPhotoRoll() {
     }
   });
 
-  rollImgs.forEach((img) => {
-    img.style.cursor = "zoom-in";
-    img.addEventListener("click", () => {
-      if (dragDistance > 5) return;
-      if (img.dataset.wasHold === "true") {
-        img.dataset.wasHold = "false";
+  frames.forEach((frame) => {
+    const img = frame.querySelector("img");
+    if (!img) return;
+    const indexOfFrame = () => Math.max(0, uniqueImages.findIndex((item) => item.src === img.src));
+
+    frame.addEventListener("click", (e) => {
+      // detail === 0 means keyboard activation, which never follows a drag.
+      if (e.detail !== 0 && dragDistance > 5) return;
+      if (frame.dataset.wasHold === "true") {
+        frame.dataset.wasHold = "false";
         return;
       }
-      const index = uniqueImages.findIndex((item) => item.src === img.src);
-      if (index !== -1) {
-        openMediaItems(uniqueImages, index);
-      }
+      openMediaItems(uniqueImages, indexOfFrame());
     });
 
-    bindHoldToOpen(img, () => {
-      const index = uniqueImages.findIndex((item) => item.src === img.src);
-      return {
-        items: uniqueImages,
-        index: index !== -1 ? index : 0
-      };
-    });
+    bindHoldToOpen(frame, () => ({
+      items: uniqueImages,
+      index: indexOfFrame()
+    }));
   });
 
-  const profileImg = document.querySelector(".profile-static img");
-  if (profileImg) {
-    profileImg.style.cursor = "zoom-in";
-    profileImg.addEventListener("click", () => {
-      if (profileImg.dataset.wasHold === "true") {
-        profileImg.dataset.wasHold = "false";
-        return;
-      }
-      openRawMediaViewer({
-        type: "image",
-        src: profileImg.src,
-        alt: profileImg.alt || "Carl Louis Profile",
-        description: "Carl Louis - BEng Aerospace Engineering graduate, Singapore Institute of Technology.",
-        noSidebar: true
-      });
+  const portraitButton = document.querySelector(".portrait-button");
+  const profileImg = portraitButton?.querySelector("img");
+  if (portraitButton && profileImg) {
+    const portraitItem = () => ({
+      type: "image",
+      src: profileImg.src,
+      alt: profileImg.alt || "Carl Louis Profile",
+      description: "Carl Louis - BEng Aerospace Engineering graduate, Singapore Institute of Technology.",
+      noSidebar: true
     });
 
-    bindHoldToOpen(profileImg, () => ({
-      item: {
-        type: "image",
-        src: profileImg.src,
-        alt: profileImg.alt || "Carl Louis Profile",
-        description: "Carl Louis - BEng Aerospace Engineering graduate, Singapore Institute of Technology.",
-        noSidebar: true
+    portraitButton.addEventListener("click", () => {
+      if (portraitButton.dataset.wasHold === "true") {
+        portraitButton.dataset.wasHold = "false";
+        return;
       }
-    }));
+      openRawMediaViewer(portraitItem());
+    });
+
+    bindHoldToOpen(portraitButton, () => ({ item: portraitItem() }));
   }
 
   tick();
 }
 
+function initScrollSpy() {
+  const links = [...document.querySelectorAll('.nav-links a[href^="#"]')];
+  const hero = document.getElementById("top");
+  const sections = links.map((link) => document.querySelector(link.getAttribute("href"))).filter(Boolean);
+  if (!sections.length) return;
+
+  const setActive = (id) => {
+    links.forEach((link) => {
+      if (link.getAttribute("href") === `#${id}`) {
+        link.setAttribute("aria-current", "true");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    });
+  };
+
+  // A thin band across the middle of the viewport decides which section is "current".
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) setActive(entry.target.id);
+      });
+    },
+    { rootMargin: "-45% 0px -50% 0px" }
+  );
+  [hero, ...sections].filter(Boolean).forEach((section) => observer.observe(section));
+}
+
 createSpacefield();
 createSpacecraftScene();
 initPhotoRoll();
+initScrollSpy();
+
+const footerYear = document.getElementById("footer-year");
+if (footerYear) footerYear.textContent = String(new Date().getFullYear());
 
 /* ── Project Detail Modal ── */
 
@@ -1388,6 +1589,53 @@ const mediaViewerNext = document.getElementById("media-viewer-next");
 let mediaViewerItems = [];
 let mediaViewerIndex = 0;
 
+/* ── Dialog focus management ──
+   Each open overlay is pushed on a stack: focus moves into it, Tab is trapped in the
+   topmost one, the page behind is made inert, and focus returns to the trigger on close. */
+const siteShell = document.querySelector(".site-shell");
+const dialogStack = [];
+const FOCUSABLE = 'a[href], button:not([disabled]), video[controls], iframe, [tabindex]:not([tabindex="-1"])';
+
+function openDialogFocus(overlayEl, initialFocus) {
+  if (dialogStack.some((entry) => entry.overlay === overlayEl)) return;
+  dialogStack.push({ overlay: overlayEl, returnFocus: document.activeElement });
+  if (siteShell) siteShell.inert = true;
+  (initialFocus || overlayEl).focus({ preventScroll: true });
+}
+
+function closeDialogFocus(overlayEl) {
+  const index = dialogStack.findIndex((entry) => entry.overlay === overlayEl);
+  if (index === -1) return;
+  const [entry] = dialogStack.splice(index, 1);
+  if (!dialogStack.length && siteShell) siteShell.inert = false;
+  if (entry.returnFocus && entry.returnFocus !== document.body && document.contains(entry.returnFocus)) {
+    entry.returnFocus.focus({ preventScroll: true });
+  } else if (overlayEl.contains(document.activeElement)) {
+    document.activeElement.blur();
+  }
+}
+
+function trapDialogFocus(event) {
+  const top = dialogStack[dialogStack.length - 1];
+  if (!top) return;
+  const focusables = [...top.overlay.querySelectorAll(FOCUSABLE)].filter(
+    (el) => el.getClientRects().length && getComputedStyle(el).visibility !== "hidden"
+  );
+  if (!focusables.length) return;
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  if (!top.overlay.contains(document.activeElement)) {
+    event.preventDefault();
+    first.focus();
+  } else if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
 let modalSceneInstance = null;
 let modalCamera = null;
 let modalRenderer = null;
@@ -1427,21 +1675,21 @@ function renderFieldNotes() {
   if (!grid) return;
 
   grid.innerHTML = fieldNoteCategories
-    .map((category) => {
+    .map((category, index) => {
       const items = sortNewestFirst(fieldNotes.filter((item) => item.category === category.id));
       const preview = items[0];
       const previewMarkup = preview ? mediaElementMarkup(preview, "note-preview-media") : buildRingPlaceholder("AWAITING MEDIA");
       const countLabel = `${items.length} ${items.length === 1 ? "ENTRY" : "ENTRIES"}`;
       return `
-        <article class="note-card reveal" data-field-category="${category.id}" tabindex="0" role="button" aria-label="Open ${category.label} field notes">
-          <div class="note-media">
+        <article class="note-card reveal" data-field-category="${category.id}" style="--i: ${index}" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Open ${category.label} field notes, ${countLabel.toLowerCase()}">
+          <div class="note-media" aria-hidden="true">
             ${previewMarkup}
-            <div class="note-orbit" aria-hidden="true"></div>
+            <div class="note-orbit"></div>
           </div>
           <div class="note-copy">
             <span>${category.label}</span>
             <h3>${category.description}</h3>
-            <p>${countLabel}</p>
+            <p><span class="note-count">${countLabel}</span><span class="card-arrow" aria-hidden="true">&rarr;</span></p>
           </div>
         </article>`;
     })
@@ -1459,7 +1707,7 @@ function renderFieldNotes() {
     });
 
     const video = card.querySelector("video");
-    if (video) {
+    if (video && !prefersReducedMotion) {
       card.addEventListener("mouseenter", () => video.play().catch(() => { }));
       card.addEventListener("mouseleave", () => {
         video.pause();
@@ -2534,10 +2782,25 @@ function openModal(projectId) {
 
   // Bind click handler to each slot for opening the detailed media lightbox
   gallery.querySelectorAll(".modal-media-slot").forEach((slot) => {
+    const index = parseInt(slot.getAttribute("data-index"), 10);
     slot.addEventListener("click", () => {
-      const index = parseInt(slot.getAttribute("data-index"), 10);
       openMediaViewer(projectId, index);
     });
+
+    // Slots are divs, so give the openable ones button semantics for keyboard users.
+    if (slot.classList.contains("has-media")) {
+      const item = data.media[index];
+      slot.setAttribute("tabindex", "0");
+      slot.setAttribute("role", "button");
+      slot.setAttribute("aria-haspopup", "dialog");
+      slot.setAttribute("aria-label", `Open ${item?.label || item?.alt || item?.title || item?.type || "media"}`);
+      slot.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openMediaViewer(projectId, index);
+        }
+      });
+    }
   });
 
   // Populate tags
@@ -2761,6 +3024,7 @@ function openModal(projectId) {
   // Show modal
   document.body.classList.add("modal-open");
   overlay.classList.add("active");
+  openDialogFocus(overlay, closeBtn);
 
   // Initialize Three.js scene
   initModalScene(projectId);
@@ -2777,6 +3041,7 @@ function openModal(projectId) {
 function closeModal() {
   overlay.classList.remove("active");
   document.body.classList.remove("modal-open");
+  closeDialogFocus(overlay);
   const visualFrame = document.getElementById("modal-visual-frame");
   if (visualFrame) {
     visualFrame.classList.remove("timeline-mode");
@@ -2820,23 +3085,30 @@ document.querySelectorAll(".project-card").forEach((card) => {
     video.load(); // Force immediate preload and first-frame rendering
     let hoverTimeout = null;
 
-    card.addEventListener("mouseenter", () => {
+    // Short intent delay so sweeping the cursor across the grid doesn't start every video.
+    const startPreview = () => {
+      if (prefersReducedMotion) return;
       if (hoverTimeout) clearTimeout(hoverTimeout);
       hoverTimeout = setTimeout(() => {
         video.play().catch((err) => {
           console.warn("Video playback was interrupted or blocked by browser autoplay policy:", err);
         });
-      }, 1000);
-    });
+      }, 180);
+    };
 
-    card.addEventListener("mouseleave", () => {
+    const stopPreview = () => {
       if (hoverTimeout) {
         clearTimeout(hoverTimeout);
         hoverTimeout = null;
       }
       video.pause();
       video.currentTime = 0;
-    });
+    };
+
+    card.addEventListener("mouseenter", startPreview);
+    card.addEventListener("mouseleave", stopPreview);
+    card.addEventListener("focusin", startPreview);
+    card.addEventListener("focusout", stopPreview);
   }
 });
 
@@ -2912,6 +3184,7 @@ function openFieldAlbum(categoryId) {
   document.body.classList.add("modal-open");
   albumOverlay.classList.add("active");
   albumOverlay.setAttribute("aria-hidden", "false");
+  openDialogFocus(albumOverlay, document.getElementById("field-album-close"));
 }
 
 function closeFieldAlbum() {
@@ -2919,6 +3192,7 @@ function closeFieldAlbum() {
   albumOverlay.classList.remove("active");
   albumOverlay.setAttribute("aria-hidden", "true");
   document.body.classList.remove("modal-open");
+  closeDialogFocus(albumOverlay);
 }
 
 const fieldAlbumClose = document.getElementById("field-album-close");
@@ -3010,6 +3284,7 @@ function renderMediaViewerItem(item) {
   // Activate lightbox overlay
   mediaViewerOverlay.classList.add("active");
   mediaViewerOverlay.setAttribute("aria-hidden", "false");
+  openDialogFocus(mediaViewerOverlay, mediaViewerClose);
 }
 
 function openMediaViewer(projectId, index) {
@@ -3045,6 +3320,7 @@ function closeMediaViewer() {
   mediaViewerDisplay.innerHTML = "";
   mediaViewerItems = [];
   mediaViewerIndex = 0;
+  closeDialogFocus(mediaViewerOverlay);
 }
 
 // Media Viewer Action Listeners
@@ -3112,7 +3388,9 @@ if (fieldNotesSection) {
 
 // Escape key listener for both modal and media viewer overlays
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") {
+  if (e.key === "Tab") {
+    trapDialogFocus(e);
+  } else if (e.key === "Escape") {
     if (mediaViewerOverlay.classList.contains("active")) {
       closeMediaViewer();
     } else if (fieldAlbumOverlay?.classList.contains("active")) {
