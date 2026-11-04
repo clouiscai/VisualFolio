@@ -18,6 +18,26 @@ export const fieldNoteCategories = [
 
 export const fieldNotes = [
   {
+    id: "robotx-uav-testing-flight-001",
+    title: "RobotX UAV Testing",
+    description: "RobotX UAV in flight during outdoor testing.",
+    category: "work",
+    album: "SIT - RobotX",
+    src: "./assets/field-notes/work/RobotX_UAV_testing.mp4",
+    type: "video",
+    date: "2026-11-01",
+  },
+  {
+    id: "robotx-uav-testing-setup-001",
+    title: "RobotX UAV Testing",
+    description: "The field setup and team during RobotX UAV testing.",
+    category: "random",
+    album: "SIT - RobotX",
+    src: "./assets/field-notes/random/RobotX_UAV_testing.jpg",
+    type: "image",
+    date: "2026-11-01",
+  },
+  {
     id: "robotx-desmond-001",
     title: "Desmond Lee from MOE Visit",
     description: "OptiPrime team moment during RobotX preparation and outreach.",
