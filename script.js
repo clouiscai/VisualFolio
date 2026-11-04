@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { fieldNoteCategories, fieldNotes } from "./src/data/fieldNotes.js";
+import { initSwarmRebuild } from "./src/swarmRebuild.js";
 
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -1143,6 +1144,7 @@ createSpacefield();
 createSpacecraftScene();
 initPhotoRoll();
 initScrollSpy();
+initSwarmRebuild();
 
 /* ── Project Detail Modal ── */
 
