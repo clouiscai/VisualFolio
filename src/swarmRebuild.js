@@ -1,7 +1,8 @@
-// "Cursor swarm" entrance: a crowd of mouse pointers builds the page out of its real
-// elements, the way someone works in a design tool. Panels get dragged out, media gets
-// resized into place, text gets typed, and buttons and tags get dropped in. Nothing is
-// faked: every step acts on the live DOM. Skipped entirely under reduced motion.
+// Page-build entrance: each section assembles from its real elements, the way someone
+// works in a design tool. Panels get dragged out, media gets resized into place, text
+// gets typed, and buttons and tags get dropped in. Nothing is faked: every step acts on
+// the live DOM. Skipped entirely under reduced motion. The `cursors` here are unseen
+// workers: they are never drawn, but their travel paces and paths each element.
 
 const STAGGER = 60;
 const MARQUEE_MS = 190;
@@ -27,36 +28,11 @@ const STYLE = `
   .swarm-hidden { opacity: 0 !important; }
   .swarm-held { opacity: 1 !important; transition: none !important; }`;
 
-const CURSOR_COLORS = ["#f4b6c2", "#f8cad4", "#d8b4f8", "#eef2f8", "#b9a4f0", "#f29db2"];
-const CURSOR_PATH = "M0 0 L0 15.5 L4 11.8 L6.7 18 L9.4 16.8 L6.7 10.8 L11.8 10.8 Z";
-const SPRITE_PAD = 4;
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const easeInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 const easeOut = (t) => 1 - Math.pow(1 - t, 3);
 const random = (a, b) => a + Math.random() * (b - a);
-
-function makeCursorSprites(scale) {
-  return CURSOR_COLORS.map((color) => {
-    const sprite = document.createElement("canvas");
-    sprite.width = sprite.height = 24 * scale;
-    const ctx = sprite.getContext("2d");
-    ctx.scale(scale, scale);
-    ctx.translate(SPRITE_PAD, SPRITE_PAD);
-    const arrow = new Path2D(CURSOR_PATH);
-    ctx.shadowColor = "rgba(0, 0, 0, 0.55)";
-    ctx.shadowBlur = 3;
-    ctx.shadowOffsetY = 1;
-    ctx.fillStyle = color;
-    ctx.fill(arrow);
-    ctx.shadowColor = "transparent";
-    ctx.lineJoin = "round";
-    ctx.lineWidth = 1.1;
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
-    ctx.stroke(arrow);
-    return sprite;
-  });
-}
 
 // When each character lands, in ms: uneven keystrokes at TYPE_WPM (5 chars to a word),
 // a beat between words and after punctuation. Whitespace the page collapses costs nothing.
@@ -107,7 +83,6 @@ export function initSwarmRebuild() {
   const lowPower = window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 760;
   const maxCursors = lowPower ? 30 : 64;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const sprites = makeCursorSprites(Math.ceil(dpr));
 
   // Text stays in the DOM untouched; a highlight paints the untyped part transparent.
   const canType = "highlights" in CSS && typeof Highlight === "function";
@@ -144,7 +119,6 @@ export function initSwarmRebuild() {
       block,
       job: null,
       t: 0,
-      press: false,
       idleFor: 0,
       wanderAt: 0,
       wx: x,
@@ -156,7 +130,6 @@ export function initSwarmRebuild() {
       wobble: random(40, 120),
       wobbleRate: random(3, 7),
       seed: Math.random() * 6.28,
-      sprite: sprites[Math.floor(Math.random() * sprites.length)],
     });
   }
 
@@ -204,7 +177,6 @@ export function initSwarmRebuild() {
     c.job = null;
     c.sel = null;
     c.caret = null;
-    c.press = false;
     c.state = "idle";
   }
 
@@ -236,7 +208,6 @@ export function initSwarmRebuild() {
         const b = c.block;
         if (steer(c, b.left, b.top - window.scrollY, dt, now) < 14) {
           c.state = "marquee";
-          c.press = true;
           b.marqueeAt = now;
         }
         break;
@@ -251,7 +222,6 @@ export function initSwarmRebuild() {
           b.ready = true;
           b.readyAt = now;
           b.el.classList.remove("swarm-bare");
-          c.press = false;
           c.state = "idle";
         }
         break;
@@ -333,7 +303,6 @@ export function initSwarmRebuild() {
           job.el.style.transform = "scale(0.08)";
           job.el.classList.remove("swarm-hidden");
           job.el.classList.add("swarm-held");
-          c.press = true;
           c.t = 0;
           c.state = "resizing";
         }
@@ -360,7 +329,6 @@ export function initSwarmRebuild() {
           job.el.classList.add("swarm-held");
           if (getComputedStyle(job.el).position === "static") job.el.style.position = "relative";
           job.el.style.zIndex = "45";
-          c.press = true;
           c.state = "dragging";
         }
         break;
@@ -422,13 +390,6 @@ export function initSwarmRebuild() {
         ctx.fillStyle = "#f8cad4";
         ctx.fillRect(c.caret.x, c.caret.y, 1.5, c.caret.h);
       }
-    }
-
-    for (const c of cursors) {
-      // Pressed cursors shrink slightly about their tip, like a real click.
-      const size = c.press ? 21 : 24;
-      const pad = (SPRITE_PAD * size) / 24;
-      ctx.drawImage(c.sprite, c.x - pad, c.y - pad, size, size);
     }
   }
 
