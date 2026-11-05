@@ -3,7 +3,8 @@ import { cpSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 export default defineConfig({
-  base: "/VisualFolio/",
+  // Vercel serves from the domain root; GitHub Pages serves from /VisualFolio/.
+  base: process.env.VERCEL ? "/" : "/VisualFolio/",
   plugins: [
     {
       name: "copy-runtime-assets",
