@@ -12,7 +12,7 @@ const TYPE_WPM = 180;
 const MAX_TYPE_MS = 2000;
 
 const MEDIA = ".portrait-button, .project-media, .note-media";
-const CONTROL = ".status-pill, .button, .domain-tags li, .roll-toggle, .footer-links a";
+const CONTROL = ".button, .roll-toggle";
 
 const STYLE = `
   #swarm-canvas { position: fixed; inset: 0; z-index: 55; width: 100%; height: 100%; pointer-events: none; }
