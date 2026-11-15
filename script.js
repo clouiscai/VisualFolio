@@ -362,7 +362,9 @@ function createSpacefield() {
         for (let k = 0; k < count; k++) {
           const lon = -Math.PI + ((k + offset) / count) * Math.PI * 2;
           if (!isLand(lon, lat)) continue;
-          pos.push(ring * Math.cos(lon) * EARTH_R, Math.sin(lat) * EARTH_R, ring * Math.sin(lon) * EARTH_R);
+          // x is negated so east runs to the viewer's right (+x, +z gave a mirror-image map);
+          // longitude 90°E still faces +z, so the same side of the globe faces the camera.
+          pos.push(-ring * Math.cos(lon) * EARTH_R, Math.sin(lat) * EARTH_R, ring * Math.sin(lon) * EARTH_R);
           // Soft white land with a faint warm tint; ice caps a touch brighter.
           const ice = Math.abs(lat) > 1.2 ? 0.25 : 0;
           const c = COL.white.clone().lerp(COL.pink, 0.14 + Math.random() * 0.12 - ice * 0.14);
