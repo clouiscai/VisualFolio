@@ -1716,7 +1716,9 @@ let modalAutoRotate = true;
 let modalInteractionCleanup = null;
 
 function sortNewestFirst(items) {
-  return [...items].sort((a, b) => new Date(b.date) - new Date(a.date));
+  // Undated items sort last instead of scrambling the order (NaN comparisons).
+  const time = (item) => (item.date ? new Date(item.date).getTime() : -Infinity);
+  return [...items].sort((a, b) => time(b) - time(a) || 0);
 }
 
 function mediaElementMarkup(item, className = "") {
