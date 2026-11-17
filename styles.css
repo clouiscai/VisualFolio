@@ -368,20 +368,28 @@ h3 {
   text-wrap: balance;
 }
 
-.fact-link {
-  position: relative;
-  color: var(--white);
-  text-decoration: underline;
-  text-decoration-color: rgba(244, 182, 194, 0.4);
-  text-underline-offset: 3px;
-  transition: color 150ms ease, text-decoration-color 150ms ease;
+/* Company logo button: 44px-tall hit area around a small logo. */
+.company-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  min-height: 44px;
+  margin-top: 2px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.2);
+  transition: background-color 150ms ease, box-shadow 150ms ease, transform 150ms var(--ease-out);
 }
 
-/* Extends the inline company link to a 44px-tall hit area. */
-.fact-link::before {
-  position: absolute;
-  inset: -12px -4px;
-  content: "";
+.company-logo img {
+  display: block;
+  width: auto;
+  height: 18px;
+}
+
+.company-logo:active {
+  transform: scale(0.97);
 }
 
 .hero-actions {
@@ -1136,9 +1144,9 @@ button.roll-frame {
     box-shadow: inset 0 0 0 1px rgba(244, 182, 194, 0.42);
   }
 
-  .fact-link:hover {
-    color: var(--rose);
-    text-decoration-color: currentColor;
+  .company-logo:hover {
+    background: rgba(244, 182, 194, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(244, 182, 194, 0.42);
   }
 
   .portrait-button:hover img {
